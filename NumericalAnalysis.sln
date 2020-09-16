@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30509.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SLAE.DirectMethods", "src\SLAE.DirectMethods\SLAE.DirectMethods.csproj", "{FE794FB1-BFD6-41FB-B64D-BCF69EB2F724}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE794FB1-BFD6-41FB-B64D-BCF69EB2F724}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE794FB1-BFD6-41FB-B64D-BCF69EB2F724}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE794FB1-BFD6-41FB-B64D-BCF69EB2F724}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE794FB1-BFD6-41FB-B64D-BCF69EB2F724}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {33F5D458-55B2-45E4-8034-B8D4A435E9C7}
+	EndGlobalSection
+EndGlobal
