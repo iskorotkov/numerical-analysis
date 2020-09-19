@@ -79,6 +79,14 @@ namespace SLAE.DirectMethods
             var computedX = u.FindX(y);
             Console.WriteLine($"X:\n{computedX.ToPrettyString()}");
 
+            var e = a.CreateDiagonalMatrix();
+            var y2 = l.FindY(e);
+            var invertedA = u.FindX(y2);
+            Console.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}");
+
+            var aByInvertedA = a.Multiply(invertedA);
+            Console.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}");
+
             Console.ReadKey();
         }
     }
@@ -105,14 +113,17 @@ namespace SLAE.DirectMethods
         public static double[][] FindY(this double[][] l, double[][] b)
         {
             var y = b.CreateCopy();
-            for (var row = 0; row < l.Rows(); row++)
+            for (var i = 0; i < b.Columns(); i++)
             {
-                for (var column = 0; column < row; column++)
+                for (var row = 0; row < l.Rows(); row++)
                 {
-                    y[row][0] -= l[row][column] * y[column][0];
-                }
+                    for (var column = 0; column < row; column++)
+                    {
+                        y[row][i] -= l[row][column] * y[column][i];
+                    }
 
-                y[row][0] /= l[row][row];
+                    y[row][i] /= l[row][row];
+                }
             }
 
             return y;
@@ -121,11 +132,14 @@ namespace SLAE.DirectMethods
         public static double[][] FindX(this double[][] u, double[][] y)
         {
             var x = y.CreateCopy();
-            for (var row = u.Rows() - 1; row >= 0; row--)
+            for (var i = 0; i < y.Columns(); i++)
             {
-                for (var column = row + 1; column < u.Columns(); column++)
+                for (var row = u.Rows() - 1; row >= 0; row--)
                 {
-                    x[row][0] -= u[row][column] * x[column][0];
+                    for (var column = row + 1; column < u.Columns(); column++)
+                    {
+                        x[row][i] -= u[row][column] * x[column][i];
+                    }
                 }
             }
 
@@ -270,6 +284,17 @@ namespace SLAE.DirectMethods
             {
                 matrix[i] = result[i];
             }
+        }
+
+        public static double[][] CreateDiagonalMatrix(this double[][] matrix)
+        {
+            var result = matrix.CreateCompatible();
+            for (var row = 0; row < matrix.Rows(); row++)
+            {
+                result[row][row] = 1.0;
+            }
+
+            return result;
         }
 
         public static double[][] CreateCopy(this double[][] matrix)
