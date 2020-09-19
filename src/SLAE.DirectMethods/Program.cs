@@ -32,9 +32,10 @@ namespace SLAE.DirectMethods
                 new[] {4.0}
             };
 
-            var b = a.Multiply(x);
+            Console.WriteLine($"a:\n{a.ToPrettyString()}");
 
-            Console.WriteLine(a.ToPrettyString());
+            var b = a.Multiply(x);
+            Console.WriteLine($"b:\n{b.ToPrettyString()}");
 
             var u = a.CreateCopy();
             var l = a.CreateCompatible();
@@ -63,13 +64,20 @@ namespace SLAE.DirectMethods
             Console.WriteLine($"L*U:\n{lu.ToPrettyString()}");
 
             a.ApplySwaps(p);
+            b.ApplySwaps(p);
             Console.WriteLine($"P*A:\n{a.ToPrettyString()}");
 
             lu.Subtract(a);
             Console.WriteLine($"L*U-P*A:\n{lu.ToPrettyString()}");
 
             var determinant = l.DiagonalMatrixDeterminant();
-            Console.WriteLine($"Determinant:\n{determinant}");
+            Console.WriteLine($"Determinant:\n{determinant}\n");
+
+            var y = l.FindY(b);
+            Console.WriteLine($"Y:\n{y.ToPrettyString()}");
+
+            var computedX = u.FindX(y);
+            Console.WriteLine($"X:\n{computedX.ToPrettyString()}");
 
             Console.ReadKey();
         }
@@ -92,6 +100,36 @@ namespace SLAE.DirectMethods
             }
 
             return result;
+        }
+
+        public static double[][] FindY(this double[][] l, double[][] b)
+        {
+            var y = b.CreateCopy();
+            for (var row = 0; row < l.Rows(); row++)
+            {
+                for (var column = 0; column < row; column++)
+                {
+                    y[row][0] -= l[row][column] * y[column][0];
+                }
+
+                y[row][0] /= l[row][row];
+            }
+
+            return y;
+        }
+
+        public static double[][] FindX(this double[][] u, double[][] y)
+        {
+            var x = y.CreateCopy();
+            for (var row = u.Rows() - 1; row >= 0; row--)
+            {
+                for (var column = row + 1; column < u.Columns(); column++)
+                {
+                    x[row][0] -= u[row][column] * x[column][0];
+                }
+            }
+
+            return x;
         }
 
         public static void Subtract(this double[][] x, double[][] y)
@@ -234,8 +272,6 @@ namespace SLAE.DirectMethods
             }
         }
 
-        public static int[] CreateSwapMatrix(this double[][] matrix) => Enumerable.Range(0, matrix.Rows()).ToArray();
-
         public static double[][] CreateCopy(this double[][] matrix)
         {
             var result = matrix.CreateCompatible();
@@ -262,7 +298,7 @@ namespace SLAE.DirectMethods
         }
 
         public static int Rows(this double[][] x) => x.Length;
-
         public static int Columns(this double[][] x) => x[0].Length;
+        public static int[] CreateSwapMatrix(this double[][] matrix) => Enumerable.Range(0, matrix.Rows()).ToArray();
     }
 }
