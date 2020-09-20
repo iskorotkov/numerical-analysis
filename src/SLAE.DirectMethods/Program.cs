@@ -79,7 +79,7 @@ namespace SLAE.DirectMethods
             var computedX = u.FindX(y);
             Console.WriteLine($"X:\n{computedX.ToPrettyString()}");
 
-            var e = a.CreateDiagonalMatrix();
+            var e = a.CreateOneMatrix();
             var y2 = l.FindY(e);
             var invertedA = u.FindX(y2);
             Console.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}");
@@ -92,6 +92,82 @@ namespace SLAE.DirectMethods
             Console.WriteLine($"cond_3(A):\n{a.Cond3(invertedA)}");
 
             Console.ReadKey();
+        }
+    }
+
+    public static class JakobiRotation
+    {
+        public static double[][] CreateRotatedDiagonalMatrix(this double[][] matrix, double eps)
+        {
+            while (matrix.Distance() > eps)
+            {
+                for (var i = 0; i < matrix.Rows() - 1; i++)
+                {
+                    for (var j = i + 1; j < matrix.Rows(); j++)
+                    {
+                        matrix = matrix.CreateRotatedMatrix(i, j, eps);
+                    }
+                }
+            }
+
+            return matrix;
+        }
+
+        private static double[][] CreateRotatedMatrix(this double[][] matrix, int i, int j, double eps)
+        {
+            if (Math.Abs(matrix[i][j]) >= eps)
+            {
+                double c;
+                double s;
+                if (matrix[i][i] == matrix[j][j])
+                {
+                    const double theta = Math.PI / 4;
+                    c = Math.Cos(theta);
+                    s = Math.Sin(theta);
+                }
+                else
+                {
+                    var tau = (matrix[i][i] - matrix[j][j]) / 2 / matrix[i][j];
+                    var t = Math.Sign(tau) / (Math.Abs(tau) + Math.Sqrt(1 + Math.Pow(tau, 2.0)));
+                    c = 1 / Math.Sqrt(1 + Math.Pow(t, 2.0));
+                    s = c * t;
+                }
+
+                var r = matrix.CreateRotationMatrix(i, j, c, s);
+                var rTransposed = r.CreateTransposed();
+                return rTransposed.Multiply(matrix).Multiply(r);
+            }
+
+            return matrix;
+        }
+
+        private static double[][] CreateRotationMatrix(this double[][] matrix, int i, int j, double c, double s)
+        {
+            var result = matrix.CreateOneMatrix();
+
+            result[i][i] = result[j][j] = c;
+
+            result[i][j] = -s;
+            result[j][i] = s;
+
+            return result;
+        }
+
+        private static double Distance(this double[][] matrix)
+        {
+            var result = 0.0;
+            for (var row = 0; row < matrix.Rows(); row++)
+            {
+                for (var column = 0; column < matrix.Columns(); column++)
+                {
+                    if (row != column)
+                    {
+                        result += Math.Pow(matrix[row][column], 2.0);
+                    }
+                }
+            }
+
+            return result;
         }
     }
 
@@ -108,6 +184,23 @@ namespace SLAE.DirectMethods
                 for (var column = 0; column < columns; column++)
                 {
                     result[row][column] = x.MultiplyRowByColumn(row, y, column);
+                }
+            }
+
+            return result;
+        }
+
+        public static double[][] CreateTransposed(this double[][] matrix)
+        {
+            var rows = matrix.Columns();
+            var columns = matrix.Rows();
+            var result = new double[rows][];
+            for (var row = 0; row < rows; row++)
+            {
+                result[row] = new double[columns];
+                for (var column = 0; column < columns; column++)
+                {
+                    result[row][column] = matrix[column][row];
                 }
             }
 
@@ -336,19 +429,26 @@ namespace SLAE.DirectMethods
 
         public static double Norm3(this double[][] matrix)
         {
+            var transposedMatrixByMatrix = matrix.CreateTransposed().Multiply(matrix);
+            var diagonalMatrix = transposedMatrixByMatrix.CreateRotatedDiagonalMatrix(1e-6);
+            return FindLargestEigenvalue(diagonalMatrix);
+        }
+
+        private static double FindLargestEigenvalue(double[][] diagonalMatrix)
+        {
             var result = 0.0;
-            for (var column = 0; column < matrix.Rows(); column++)
+            for (var row = 0; row < diagonalMatrix.Rows(); row++)
             {
-                for (var row = 0; row < matrix.Columns(); row++)
+                if (Math.Abs(diagonalMatrix[row][row]) > result)
                 {
-                    result += Math.Pow(matrix[row][column], 2);
+                    result = Math.Abs(diagonalMatrix[row][row]);
                 }
             }
 
             return Math.Sqrt(result);
         }
 
-        public static double[][] CreateDiagonalMatrix(this double[][] matrix)
+        public static double[][] CreateOneMatrix(this double[][] matrix)
         {
             var result = matrix.CreateCompatible();
             for (var row = 0; row < matrix.Rows(); row++)
