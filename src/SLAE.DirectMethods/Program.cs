@@ -171,7 +171,7 @@ namespace SLAE.DirectMethods
         }
     }
 
-    public static class MatrixExtensions
+    public static class MatrixMath
     {
         public static double[][] Multiply(this double[][] x, double[][] y)
         {
@@ -190,59 +190,6 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        public static double[][] CreateTransposed(this double[][] matrix)
-        {
-            var rows = matrix.Columns();
-            var columns = matrix.Rows();
-            var result = new double[rows][];
-            for (var row = 0; row < rows; row++)
-            {
-                result[row] = new double[columns];
-                for (var column = 0; column < columns; column++)
-                {
-                    result[row][column] = matrix[column][row];
-                }
-            }
-
-            return result;
-        }
-
-        public static double[][] FindY(this double[][] l, double[][] b)
-        {
-            var y = b.CreateCopy();
-            for (var i = 0; i < b.Columns(); i++)
-            {
-                for (var row = 0; row < l.Rows(); row++)
-                {
-                    for (var column = 0; column < row; column++)
-                    {
-                        y[row][i] -= l[row][column] * y[column][i];
-                    }
-
-                    y[row][i] /= l[row][row];
-                }
-            }
-
-            return y;
-        }
-
-        public static double[][] FindX(this double[][] u, double[][] y)
-        {
-            var x = y.CreateCopy();
-            for (var i = 0; i < y.Columns(); i++)
-            {
-                for (var row = u.Rows() - 1; row >= 0; row--)
-                {
-                    for (var column = row + 1; column < u.Columns(); column++)
-                    {
-                        x[row][i] -= u[row][column] * x[column][i];
-                    }
-                }
-            }
-
-            return x;
-        }
-
         public static void Subtract(this double[][] x, double[][] y)
         {
             for (var row = 0; row < x.Rows(); row++)
@@ -252,17 +199,6 @@ namespace SLAE.DirectMethods
                     x[row][column] -= y[row][column];
                 }
             }
-        }
-
-        public static double DiagonalMatrixDeterminant(this double[][] matrix)
-        {
-            var result = 1.0;
-            for (var row = 0; row < matrix.Rows(); row++)
-            {
-                result *= matrix[row][row];
-            }
-
-            return result;
         }
 
         private static double MultiplyRowByColumn(this double[][] x, int row, double[][] y, int column)
@@ -276,7 +212,10 @@ namespace SLAE.DirectMethods
 
             return result;
         }
+    }
 
+    public static class MatrixFormatting
+    {
         public static string ToPrettyString(this double[][] x)
         {
             var builder = new StringBuilder();
@@ -305,84 +244,10 @@ namespace SLAE.DirectMethods
 
             return builder.ToString();
         }
+    }
 
-        public static int RowToSwapWith(this double[][] matrix, int column)
-        {
-            var targetRow = column;
-            for (var row = column + 1; row < matrix.Rows(); row++)
-            {
-                if (Math.Abs(matrix[targetRow][column]) < Math.Abs(matrix[row][column]))
-                {
-                    targetRow = row;
-                }
-            }
-
-            return targetRow;
-        }
-
-        public static void SwapRows(this double[][] matrix, int rowA, int rowB)
-        {
-            for (var column = 0; column < Columns(matrix); column++)
-            {
-                var temp = matrix[rowA][column];
-                matrix[rowA][column] = matrix[rowB][column];
-                matrix[rowB][column] = temp;
-            }
-        }
-
-        public static void SubtractRow(this double[][] matrix, int subtractedRow)
-        {
-            for (var row = subtractedRow + 1; row < matrix.Rows(); row++)
-            {
-                var multiplier = matrix[row][subtractedRow] / matrix[subtractedRow][subtractedRow];
-                matrix[row][subtractedRow] = 0.0;
-                for (var column = subtractedRow + 1; column < matrix.Columns(); column++)
-                {
-                    matrix[row][column] -= multiplier * matrix[subtractedRow][column];
-                }
-            }
-        }
-
-        public static void NormalizeRow(this double[][] matrix, int row)
-        {
-            for (var column = row + 1; column < matrix.Columns(); column++)
-            {
-                matrix[row][column] /= matrix[row][row];
-            }
-
-            matrix[row][row] = 1.0;
-        }
-
-        public static void SwapRows(this int[] matrix, int row1, int row2)
-        {
-            var temp = matrix[row1];
-            matrix[row1] = matrix[row2];
-            matrix[row2] = temp;
-        }
-
-        public static void FillColumn(this double[][] l, double[][] u, int column)
-        {
-            for (var row = column; row < l.Columns(); row++)
-            {
-                l[row][column] = u[row][column];
-            }
-        }
-
-        public static void ApplySwaps(this double[][] matrix, int[] swaps)
-        {
-            var result = new double[matrix.Rows()][];
-            for (var i = 0; i < matrix.Rows(); i++)
-            {
-                var index = swaps[i];
-                result[i] = matrix[index];
-            }
-
-            for (var i = 0; i < matrix.Rows(); i++)
-            {
-                matrix[i] = result[i];
-            }
-        }
-
+    public static class MatrixNorms
+    {
         public static double Cond1(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm1() * invertedMatrix.Norm1();
         public static double Cond2(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm2() * invertedMatrix.Norm2();
         public static double Cond3(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm3() * invertedMatrix.Norm3();
@@ -447,6 +312,98 @@ namespace SLAE.DirectMethods
 
             return Math.Sqrt(result);
         }
+    }
+
+    public static class MatrixRows
+    {
+        public static int RowToSwapWith(this double[][] matrix, int column)
+        {
+            var targetRow = column;
+            for (var row = column + 1; row < matrix.Rows(); row++)
+            {
+                if (Math.Abs(matrix[targetRow][column]) < Math.Abs(matrix[row][column]))
+                {
+                    targetRow = row;
+                }
+            }
+
+            return targetRow;
+        }
+
+        public static void SwapRows(this double[][] matrix, int rowA, int rowB)
+        {
+            for (var column = 0; column < matrix.Columns(); column++)
+            {
+                var temp = matrix[rowA][column];
+                matrix[rowA][column] = matrix[rowB][column];
+                matrix[rowB][column] = temp;
+            }
+        }
+
+        public static void SubtractRow(this double[][] matrix, int subtractedRow)
+        {
+            for (var row = subtractedRow + 1; row < matrix.Rows(); row++)
+            {
+                var multiplier = matrix[row][subtractedRow] / matrix[subtractedRow][subtractedRow];
+                matrix[row][subtractedRow] = 0.0;
+                for (var column = subtractedRow + 1; column < matrix.Columns(); column++)
+                {
+                    matrix[row][column] -= multiplier * matrix[subtractedRow][column];
+                }
+            }
+        }
+
+        public static void NormalizeRow(this double[][] matrix, int row)
+        {
+            for (var column = row + 1; column < matrix.Columns(); column++)
+            {
+                matrix[row][column] /= matrix[row][row];
+            }
+
+            matrix[row][row] = 1.0;
+        }
+
+        public static void SwapRows(this int[] matrix, int row1, int row2)
+        {
+            var temp = matrix[row1];
+            matrix[row1] = matrix[row2];
+            matrix[row2] = temp;
+        }
+
+        public static void ApplySwaps(this double[][] matrix, int[] swaps)
+        {
+            var result = new double[matrix.Rows()][];
+            for (var i = 0; i < matrix.Rows(); i++)
+            {
+                var index = swaps[i];
+                result[i] = matrix[index];
+            }
+
+            for (var i = 0; i < matrix.Rows(); i++)
+            {
+                matrix[i] = result[i];
+            }
+        }
+    }
+
+    public static class MatrixCreation
+    {
+        public static double[][] CreateTransposed(this double[][] matrix)
+        {
+            var rows = matrix.Columns();
+            var columns = matrix.Rows();
+            var result = new double[rows][];
+            for (var row = 0; row < rows; row++)
+            {
+                result[row] = new double[columns];
+                for (var column = 0; column < columns; column++)
+                {
+                    result[row][column] = matrix[column][row];
+                }
+            }
+
+            return result;
+        }
 
         public static double[][] CreateOneMatrix(this double[][] matrix)
         {
@@ -484,8 +441,73 @@ namespace SLAE.DirectMethods
             return result;
         }
 
+        public static int[] CreateSwapMatrix(this double[][] matrix) => Enumerable.Range(0, matrix.Rows()).ToArray();
+    }
+
+    public static class SLAESolving
+    {
+        public static double[][] FindY(this double[][] l, double[][] b)
+        {
+            var y = b.CreateCopy();
+            for (var i = 0; i < b.Columns(); i++)
+            {
+                for (var row = 0; row < l.Rows(); row++)
+                {
+                    for (var column = 0; column < row; column++)
+                    {
+                        y[row][i] -= l[row][column] * y[column][i];
+                    }
+
+                    y[row][i] /= l[row][row];
+                }
+            }
+
+            return y;
+        }
+
+        public static double[][] FindX(this double[][] u, double[][] y)
+        {
+            var x = y.CreateCopy();
+            for (var i = 0; i < y.Columns(); i++)
+            {
+                for (var row = u.Rows() - 1; row >= 0; row--)
+                {
+                    for (var column = row + 1; column < u.Columns(); column++)
+                    {
+                        x[row][i] -= u[row][column] * x[column][i];
+                    }
+                }
+            }
+
+            return x;
+        }
+
+        public static double DiagonalMatrixDeterminant(this double[][] matrix)
+        {
+            var result = 1.0;
+            for (var row = 0; row < matrix.Rows(); row++)
+            {
+                result *= matrix[row][row];
+            }
+
+            return result;
+        }
+
+        public static void FillColumn(this double[][] l, double[][] u, int column)
+        {
+            for (var row = column; row < l.Columns(); row++)
+            {
+                l[row][column] = u[row][column];
+            }
+        }
+    }
+
+    public static class MatrixExtensions
+    {
         public static int Rows(this double[][] x) => x.Length;
         public static int Columns(this double[][] x) => x[0].Length;
-        public static int[] CreateSwapMatrix(this double[][] matrix) => Enumerable.Range(0, matrix.Rows()).ToArray();
+        public static double At(this double[][] matrix, int row, int column) => matrix[row][column];
+        public static double Set(this double[][] matrix, int row, int column, double value) => matrix[row][column] = value;
+
     }
 }
