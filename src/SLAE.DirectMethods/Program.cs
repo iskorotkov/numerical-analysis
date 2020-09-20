@@ -87,6 +87,10 @@ namespace SLAE.DirectMethods
             var aByInvertedA = a.Multiply(invertedA);
             Console.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}");
 
+            Console.WriteLine($"cond_1(A):\n{a.Cond1(invertedA)}");
+            Console.WriteLine($"cond_2(A):\n{a.Cond2(invertedA)}");
+            Console.WriteLine($"cond_3(A):\n{a.Cond3(invertedA)}");
+
             Console.ReadKey();
         }
     }
@@ -284,6 +288,64 @@ namespace SLAE.DirectMethods
             {
                 matrix[i] = result[i];
             }
+        }
+
+        public static double Cond1(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm1() * invertedMatrix.Norm1();
+        public static double Cond2(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm2() * invertedMatrix.Norm2();
+        public static double Cond3(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm3() * invertedMatrix.Norm3();
+
+        public static double Norm1(this double[][] matrix)
+        {
+            var result = 0.0;
+            for (var row = 0; row < matrix.Rows(); row++)
+            {
+                var sum = 0.0;
+                for (var column = 0; column < matrix.Columns(); column++)
+                {
+                    sum += Math.Abs(matrix[row][column]);
+                }
+
+                if (sum > result)
+                {
+                    result = sum;
+                }
+            }
+
+            return result;
+        }
+
+        public static double Norm2(this double[][] matrix)
+        {
+            var result = 0.0;
+            for (var column = 0; column < matrix.Rows(); column++)
+            {
+                var sum = 0.0;
+                for (var row = 0; row < matrix.Columns(); row++)
+                {
+                    sum += Math.Abs(matrix[row][column]);
+                }
+
+                if (sum > result)
+                {
+                    result = sum;
+                }
+            }
+
+            return result;
+        }
+
+        public static double Norm3(this double[][] matrix)
+        {
+            var result = 0.0;
+            for (var column = 0; column < matrix.Rows(); column++)
+            {
+                for (var row = 0; row < matrix.Columns(); row++)
+                {
+                    result += Math.Pow(matrix[row][column], 2);
+                }
+            }
+
+            return Math.Sqrt(result);
         }
 
         public static double[][] CreateDiagonalMatrix(this double[][] matrix)
