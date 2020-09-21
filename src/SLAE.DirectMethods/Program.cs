@@ -40,9 +40,15 @@ namespace SLAE.DirectMethods
             var u = a.CreateCopy();
             var l = a.CreateCompatible();
             var p = a.CreateSwapMatrix();
+            var rank = a.Rows();
             for (var row = 0; row < u.Rows(); row++)
             {
                 var rowToSwap = u.RowToSwapWith(row);
+                if (u[rowToSwap][rowToSwap] < 1e-6)
+                {
+                    rank--;
+                }
+
                 if (rowToSwap != row)
                 {
                     u.SwapRows(row, rowToSwap);
@@ -57,8 +63,10 @@ namespace SLAE.DirectMethods
 
                 Console.WriteLine($"U:\n{u.ToPrettyString()}");
                 Console.WriteLine($"L:\n{l.ToPrettyString()}");
-                Console.WriteLine($"P:\n{p.ToPrettyString()}");
             }
+
+            Console.WriteLine($"Rank={rank}");
+            Console.WriteLine($"P:\n{p.ToPrettyString()}");
 
             var lu = l.Multiply(u);
             Console.WriteLine($"L*U:\n{lu.ToPrettyString()}");
