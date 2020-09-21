@@ -91,6 +91,15 @@ namespace SLAE.DirectMethods
             Console.WriteLine($"cond_2(A):\n{a.Cond2(invertedA)}");
             Console.WriteLine($"cond_3(A):\n{a.Cond3(invertedA)}");
 
+            var dif = a.Multiply(computedX);
+            dif.Subtract(b);
+            Console.WriteLine($"A*x-b=\n{dif.ToPrettyString()}");
+
+            var dx = computedX.CreateCopy();
+            dx.Subtract(x);
+            dx.Divide(x);
+            Console.WriteLine($"delta(x)=\n{dx.ToPrettyString()}");
+
             Console.ReadKey();
         }
     }
@@ -197,6 +206,17 @@ namespace SLAE.DirectMethods
                 for (var column = 0; column < x.Columns(); column++)
                 {
                     x[row][column] -= y[row][column];
+                }
+            }
+        }
+
+        public static void Divide(this double[][] x, double[][] y)
+        {
+            for (var row = 0; row < x.Rows(); row++)
+            {
+                for (var column = 0; column < x.Columns(); column++)
+                {
+                    x[row][column] /= y[row][column];
                 }
             }
         }
