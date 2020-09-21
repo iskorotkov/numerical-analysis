@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -6,23 +7,19 @@ namespace SLAE.DirectMethods
 {
     internal static class Program
     {
+        private const string InputFile = "data/in.txt";
+        private const string OutputFile = "data/out.txt";
+
         private static void Main()
         {
-            // var a = new[,]
-            // {
-            //     {-2.8, -9.0, 8.1, 3.0},
-            //     {4.6, -9.4, -3.6, -9.5},
-            //     {8.4, 2.6, 2.9, 3.6},
-            //     {3.6, -1.6, 0.4, 2.4}
-            // };
-
-            var a = new double[][]
+            double[][] a;
+            using (var reader = new StreamReader(InputFile))
             {
-                new[] {-8.8, 0.7, 4.5, 3.0},
-                new[] {-2.0, -0.4, 9.7, 8.6},
-                new[] {-9.7, -9.5, 3.8, -3.5},
-                new[] {-7.1, 1.6, 1.4, 2.9}
-            };
+                a = MatrixIO.ReadMatrix(reader);
+            }
+
+            using var file = new StreamWriter(OutputFile);
+            Console.SetOut(file);
 
             var x = new double[][]
             {
@@ -107,8 +104,40 @@ namespace SLAE.DirectMethods
             dx.Subtract(x);
             dx.Divide(x);
             Console.WriteLine($"delta(x)=\n{dx.ToPrettyString()}");
+        }
+    }
 
-            Console.ReadKey();
+    public static class MatrixIO
+    {
+        public static double[][] ReadMatrix(StreamReader reader)
+        {
+            var dimension = int.Parse(reader.ReadLine());
+            var matrix = CreateEmptyMatrix(dimension, dimension);
+            for (var row = 0; row < dimension; row++)
+            {
+                var line = reader.ReadLine();
+                var values = line.Split(';', ',', ' ', '\t')
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Select(double.Parse)
+                    .ToArray();
+                for (var column = 0; column < dimension; column++)
+                {
+                    matrix[row][column] = values[column];
+                }
+            }
+
+            return matrix;
+        }
+
+        private static double[][] CreateEmptyMatrix(int rows, int columns)
+        {
+            var result = new double[rows][];
+            for (var row = 0; row < rows; row++)
+            {
+                result[row] = new double[columns];
+            }
+
+            return result;
         }
     }
 
