@@ -18,8 +18,7 @@ namespace SLAE.DirectMethods
                 a = MatrixIO.ReadMatrix(reader);
             }
 
-            using var file = new StreamWriter(OutputFile);
-            Console.SetOut(file);
+            using TextWriter writer = new StreamWriter(OutputFile);
 
             var x = new double[][]
             {
@@ -29,10 +28,10 @@ namespace SLAE.DirectMethods
                 new[] {4.0}
             };
 
-            Console.WriteLine($"a:\n{a.ToPrettyString()}");
+            writer.WriteLine($"a:\n{a.ToPrettyString()}");
 
             var b = a.Multiply(x);
-            Console.WriteLine($"b:\n{b.ToPrettyString()}");
+            writer.WriteLine($"b:\n{b.ToPrettyString()}");
 
             var u = a.CreateCopy();
             var l = a.CreateCompatible();
@@ -58,52 +57,52 @@ namespace SLAE.DirectMethods
                 u.SubtractRow(row);
                 u.NormalizeRow(row);
 
-                Console.WriteLine($"U:\n{u.ToPrettyString()}");
-                Console.WriteLine($"L:\n{l.ToPrettyString()}");
+                writer.WriteLine($"U:\n{u.ToPrettyString()}");
+                writer.WriteLine($"L:\n{l.ToPrettyString()}");
             }
 
-            Console.WriteLine($"Rank={rank}");
-            Console.WriteLine($"P:\n{p.ToPrettyString()}");
+            writer.WriteLine($"Rank={rank}");
+            writer.WriteLine($"P:\n{p.ToPrettyString()}");
 
             var lu = l.Multiply(u);
-            Console.WriteLine($"L*U:\n{lu.ToPrettyString()}");
+            writer.WriteLine($"L*U:\n{lu.ToPrettyString()}");
 
             a.ApplySwaps(p);
             b.ApplySwaps(p);
-            Console.WriteLine($"P*A:\n{a.ToPrettyString()}");
+            writer.WriteLine($"P*A:\n{a.ToPrettyString()}");
 
             lu.Subtract(a);
-            Console.WriteLine($"L*U-P*A:\n{lu.ToPrettyString()}");
+            writer.WriteLine($"L*U-P*A:\n{lu.ToPrettyString()}");
 
             var determinant = l.DiagonalMatrixDeterminant();
-            Console.WriteLine($"Determinant:\n{determinant}\n");
+            writer.WriteLine($"Determinant:\n{determinant}\n");
 
             var y = l.FindY(b);
-            Console.WriteLine($"Y:\n{y.ToPrettyString()}");
+            writer.WriteLine($"Y:\n{y.ToPrettyString()}");
 
             var computedX = u.FindX(y);
-            Console.WriteLine($"X:\n{computedX.ToPrettyString()}");
+            writer.WriteLine($"X:\n{computedX.ToPrettyString()}");
 
             var e = a.CreateOneMatrix();
             var y2 = l.FindY(e);
             var invertedA = u.FindX(y2);
-            Console.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}");
+            writer.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}");
 
             var aByInvertedA = a.Multiply(invertedA);
-            Console.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}");
+            writer.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}");
 
-            Console.WriteLine($"cond_1(A):\n{a.Cond1(invertedA)}");
-            Console.WriteLine($"cond_2(A):\n{a.Cond2(invertedA)}");
-            Console.WriteLine($"cond_3(A):\n{a.Cond3(invertedA)}");
+            writer.WriteLine($"cond_1(A):\n{a.Cond1(invertedA)}");
+            writer.WriteLine($"cond_2(A):\n{a.Cond2(invertedA)}");
+            writer.WriteLine($"cond_3(A):\n{a.Cond3(invertedA)}");
 
             var dif = a.Multiply(computedX);
             dif.Subtract(b);
-            Console.WriteLine($"A*x-b=\n{dif.ToPrettyString()}");
+            writer.WriteLine($"A*x-b=\n{dif.ToPrettyString()}");
 
             var dx = computedX.CreateCopy();
             dx.Subtract(x);
             dx.Divide(x);
-            Console.WriteLine($"delta(x)=\n{dx.ToPrettyString()}");
+            writer.WriteLine($"delta(x)=\n{dx.ToPrettyString()}");
         }
     }
 
