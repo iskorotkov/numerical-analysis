@@ -12,34 +12,38 @@ namespace SLAE.DirectMethods
 
         private static void Main()
         {
+            // Read A
             double[][] a;
             using (var reader = new StreamReader(InputFile))
             {
                 a = MatrixIO.ReadMatrix(reader);
             }
 
+            // x
+            var x = new double[][] { new[] { 1.0 }, new[] { 2.0 }, new[] { 3.0 }, new[] { 4.0 } };
+
+            // Calculate b = A*x
+            var b = a.Multiply(x);
+
             using TextWriter writer = new StreamWriter(OutputFile);
 
-            var x = new double[][]
-            {
-                new[] {1.0},
-                new[] {2.0},
-                new[] {3.0},
-                new[] {4.0}
-            };
+            // Print input values
+            writer.WriteLine("Variant=8b\n");
+            writer.WriteLine($"x:\n{x.ToPrettyString()}\n");
+            writer.WriteLine($"A:\n{a.ToPrettyString()}\n");
+            writer.WriteLine($"b:\n{b.ToPrettyString()}\n");
 
-            writer.WriteLine($"a:\n{a.ToPrettyString()}");
-
-            var b = a.Multiply(x);
-            writer.WriteLine($"b:\n{b.ToPrettyString()}");
-
-            var u = a.CreateCopy();
             var l = a.CreateCompatible();
+            var u = a.CreateCopy();
             var p = a.CreateSwapMatrix();
-            var rank = a.Rows();
+            var rank = l.Rows();
+
+            // Make LU decomposition
             for (var row = 0; row < u.Rows(); row++)
             {
                 var rowToSwap = u.RowToSwapWith(row);
+                writer.WriteLine($"k = {row + 1}; m = {rowToSwap + 1}\n");
+
                 if (u[rowToSwap][rowToSwap] < 1e-6)
                 {
                     rank--;
@@ -57,52 +61,56 @@ namespace SLAE.DirectMethods
                 u.SubtractRow(row);
                 u.NormalizeRow(row);
 
-                writer.WriteLine($"U:\n{u.ToPrettyString()}");
-                writer.WriteLine($"L:\n{l.ToPrettyString()}");
+                writer.WriteLine($"U:\n{u.ToPrettyString()}\n");
+                writer.WriteLine($"L:\n{l.ToPrettyString()}\n");
             }
 
-            writer.WriteLine($"Rank={rank}");
-            writer.WriteLine($"P:\n{p.ToPrettyString()}");
-
-            var lu = l.Multiply(u);
-            writer.WriteLine($"L*U:\n{lu.ToPrettyString()}");
+            writer.WriteLine($"P:\n{p.ToPrettyString()}\n");
+            writer.WriteLine($"Rank = {rank}\n");
 
             a.ApplySwaps(p);
             b.ApplySwaps(p);
-            writer.WriteLine($"P*A:\n{a.ToPrettyString()}");
 
+            // Check that LU = PA
+            var lu = l.Multiply(u);
             lu.Subtract(a);
-            writer.WriteLine($"L*U-P*A:\n{lu.ToPrettyString()}");
+            writer.WriteLine($"L*U-P*A:\n{lu.ToPrettyString()}\n");
 
+            // Print determinant
             var determinant = l.DiagonalMatrixDeterminant();
-            writer.WriteLine($"Determinant:\n{determinant}\n");
+            writer.WriteLine($"Determinant = {determinant}\n");
 
+            // Compute x
             var y = l.FindY(b);
-            writer.WriteLine($"Y:\n{y.ToPrettyString()}");
-
             var computedX = u.FindX(y);
-            writer.WriteLine($"X:\n{computedX.ToPrettyString()}");
+            writer.WriteLine($"x:\n{computedX.ToPrettyString()}\n");
 
+            // Find A^(-1)
             var e = a.CreateOneMatrix();
             var y2 = l.FindY(e);
             var invertedA = u.FindX(y2);
-            writer.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}");
+            writer.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}\n");
 
+            // Check that A*A^(-1) = E
             var aByInvertedA = a.Multiply(invertedA);
-            writer.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}");
+            writer.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}\n");
 
-            writer.WriteLine($"cond_1(A):\n{a.Cond1(invertedA)}");
-            writer.WriteLine($"cond_2(A):\n{a.Cond2(invertedA)}");
-            writer.WriteLine($"cond_3(A):\n{a.Cond3(invertedA)}");
+            // Find condition numbers of matrix A
+            writer.WriteLine("Condition number of matrix A:");
+            writer.WriteLine($"cond-1(A) = {a.Cond1(invertedA)}");
+            writer.WriteLine($"cond-2(A) = {a.Cond2(invertedA)}");
+            writer.WriteLine($"cond-3(A) = {a.Cond3(invertedA)}\n");
 
+            // Find A*x-b
             var dif = a.Multiply(computedX);
             dif.Subtract(b);
-            writer.WriteLine($"A*x-b=\n{dif.ToPrettyString()}");
+            writer.WriteLine($"A*x-b:\n{dif.ToPrettyString()}\n");
 
+            // Find relative error
             var dx = computedX.CreateCopy();
             dx.Subtract(x);
             dx.Divide(x);
-            writer.WriteLine($"delta(x)=\n{dx.ToPrettyString()}");
+            writer.WriteLine($"Relative error:\n{dx.ToPrettyString()}");
         }
     }
 
@@ -283,9 +291,11 @@ namespace SLAE.DirectMethods
                     builder.Append(";\t");
                 }
 
+                builder.Remove(builder.Length - 1, 1);
                 builder.Append('\n');
             }
 
+            builder.Remove(builder.Length - 1, 1);
             return builder.ToString();
         }
 
@@ -294,10 +304,11 @@ namespace SLAE.DirectMethods
             var builder = new StringBuilder();
             foreach (var row in matrix)
             {
-                builder.Append(row);
+                builder.Append(row + 1);
                 builder.Append(";\n");
             }
 
+            builder.Remove(builder.Length - 1, 1);
             return builder.ToString();
         }
     }
