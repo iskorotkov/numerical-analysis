@@ -20,7 +20,7 @@ namespace SLAE.DirectMethods
             }
 
             // x
-            var x = new double[][] { new[] { 1.0 }, new[] { 2.0 }, new[] { 3.0 }, new[] { 4.0 } };
+            var x = new[] {new[] {1.0}, new[] {2.0}, new[] {3.0}, new[] {4.0}};
 
             // Calculate b = A*x
             var b = a.Multiply(x);
@@ -118,12 +118,12 @@ namespace SLAE.DirectMethods
     {
         public static double[][] ReadMatrix(StreamReader reader)
         {
-            var dimension = int.Parse(reader.ReadLine());
+            var dimension = int.Parse(reader.ReadLine()!);
             var matrix = CreateEmptyMatrix(dimension, dimension);
             for (var row = 0; row < dimension; row++)
             {
                 var line = reader.ReadLine();
-                var values = line.Split(';', ',', ' ', '\t')
+                var values = line!.Split(';', ',', ' ', '\t')
                     .Where(s => !string.IsNullOrWhiteSpace(s))
                     .Select(double.Parse)
                     .ToArray();
@@ -172,7 +172,7 @@ namespace SLAE.DirectMethods
             {
                 double c;
                 double s;
-                if (matrix[i][i] == matrix[j][j])
+                if (Math.Abs(matrix[i][i] - matrix[j][j]) < 1e-6)
                 {
                     const double theta = Math.PI / 4;
                     c = Math.Cos(theta);
@@ -315,11 +315,16 @@ namespace SLAE.DirectMethods
 
     public static class MatrixNorms
     {
-        public static double Cond1(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm1() * invertedMatrix.Norm1();
-        public static double Cond2(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm2() * invertedMatrix.Norm2();
-        public static double Cond3(this double[][] matrix, double[][] invertedMatrix) => matrix.Norm3() * invertedMatrix.Norm3();
+        public static double Cond1(this double[][] matrix, double[][] invertedMatrix) =>
+            matrix.Norm1() * invertedMatrix.Norm1();
 
-        public static double Norm1(this double[][] matrix)
+        public static double Cond2(this double[][] matrix, double[][] invertedMatrix) =>
+            matrix.Norm2() * invertedMatrix.Norm2();
+
+        public static double Cond3(this double[][] matrix, double[][] invertedMatrix) =>
+            matrix.Norm3() * invertedMatrix.Norm3();
+
+        private static double Norm1(this double[][] matrix)
         {
             var result = 0.0;
             for (var row = 0; row < matrix.Rows(); row++)
@@ -339,7 +344,7 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        public static double Norm2(this double[][] matrix)
+        private static double Norm2(this double[][] matrix)
         {
             var result = 0.0;
             for (var column = 0; column < matrix.Rows(); column++)
@@ -359,7 +364,7 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        public static double Norm3(this double[][] matrix)
+        private static double Norm3(this double[][] matrix)
         {
             var transposedMatrixByMatrix = matrix.CreateTransposed().Multiply(matrix);
             var diagonalMatrix = transposedMatrixByMatrix.CreateRotatedDiagonalMatrix(1e-6);
@@ -573,7 +578,5 @@ namespace SLAE.DirectMethods
     {
         public static int Rows(this double[][] x) => x.Length;
         public static int Columns(this double[][] x) => x[0].Length;
-        public static double At(this double[][] matrix, int row, int column) => matrix[row][column];
-        public static double Set(this double[][] matrix, int row, int column, double value) => matrix[row][column] = value;
     }
 }
