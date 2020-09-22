@@ -341,3 +341,4 @@ healthchecksdb
 
 # Custom
 src/SLAE.DirectMethods/data/out.txt
+.ionide

@@ -44,7 +44,7 @@ namespace SLAE.DirectMethods
                 var rowToSwap = u.RowToSwapWith(row);
                 writer.WriteLine($"k = {row + 1}; m = {rowToSwap + 1}\n");
 
-                if (u[rowToSwap][rowToSwap] < 1e-6)
+                if (Math.Abs(u[rowToSwap][rowToSwap]) < 1e-6)
                 {
                     rank--;
                 }
