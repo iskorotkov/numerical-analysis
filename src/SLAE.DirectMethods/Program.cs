@@ -564,6 +564,5 @@ namespace SLAE.DirectMethods
         public static int Columns(this double[][] x) => x[0].Length;
         public static double At(this double[][] matrix, int row, int column) => matrix[row][column];
         public static double Set(this double[][] matrix, int row, int column, double value) => matrix[row][column] = value;
-
     }
 }
