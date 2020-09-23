@@ -28,7 +28,7 @@ namespace SLAE.DirectMethods
             using TextWriter writer = new StreamWriter(OutputFile);
 
             // Print input values
-            writer.WriteLine("Variant=8b\n");
+            writer.WriteLine("Variant = 8b\n");
             writer.WriteLine($"x:\n{x.ToPrettyString()}\n");
             writer.WriteLine($"A:\n{a.ToPrettyString()}\n");
             writer.WriteLine($"b:\n{b.ToPrettyString()}\n");
@@ -42,7 +42,7 @@ namespace SLAE.DirectMethods
             for (var row = 0; row < u.Rows(); row++)
             {
                 var rowToSwap = u.RowToSwapWith(row);
-                writer.WriteLine($"k = {row + 1}; m = {rowToSwap + 1}\n");
+                writer.WriteLine($"k = {row + 1}; m = {rowToSwap + 1};\n");
 
                 if (Math.Abs(u[rowToSwap][rowToSwap]) < 1e-6)
                 {
@@ -287,28 +287,30 @@ namespace SLAE.DirectMethods
             {
                 for (var column = 0; column < x.Columns(); column++)
                 {
-                    builder.Append(x[row][column]);
-                    builder.Append(";\t");
+                    builder.AppendFormat("{0,15:g6};", x[row][column]);
                 }
 
-                builder.Remove(builder.Length - 1, 1);
-                builder.Append('\n');
+                if (row != x.Rows() - 1)
+                {
+                    builder.Append('\n');
+                }
             }
 
-            builder.Remove(builder.Length - 1, 1);
             return builder.ToString();
         }
 
         public static string ToPrettyString(this int[] matrix)
         {
             var builder = new StringBuilder();
-            foreach (var row in matrix)
+            for (var row = 0; row < matrix.Length; row++)
             {
-                builder.Append(row + 1);
-                builder.Append(";\n");
+                builder.AppendFormat("{0,15:g6};", matrix[row] + 1);
+                if (row != matrix.Length - 1)
+                {
+                    builder.Append('\n');
+                }
             }
 
-            builder.Remove(builder.Length - 1, 1);
             return builder.ToString();
         }
     }
