@@ -68,12 +68,15 @@ namespace SLAE.DirectMethods
             writer.WriteLine($"P:\n{p.ToPrettyString()}\n");
             writer.WriteLine($"Rank = {rank}\n");
 
-            a.ApplySwaps(p);
-            b.ApplySwaps(p);
+            var pa = a.CreateCopy();
+            pa.ApplySwaps(p);
+
+            var pb = b.CreateCopy();
+            pb.ApplySwaps(p);
 
             // Check that LU = PA
             var lu = l.Multiply(u);
-            lu.Subtract(a);
+            lu.Subtract(pa);
             writer.WriteLine($"L*U-P*A:\n{lu.ToPrettyString()}\n");
 
             // Print determinant
@@ -81,25 +84,25 @@ namespace SLAE.DirectMethods
             writer.WriteLine($"Determinant = {determinant}\n");
 
             // Compute x
-            var y = l.FindY(b);
+            var y = l.FindY(pb);
             var computedX = u.FindX(y);
             writer.WriteLine($"x:\n{computedX.ToPrettyString()}\n");
 
             // Find A^(-1)
-            var e = a.CreateOneMatrix();
+            var e = pa.CreateOneMatrix();
             var y2 = l.FindY(e);
             var invertedA = u.FindX(y2);
             writer.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}\n");
 
             // Check that A*A^(-1) = E
-            var aByInvertedA = a.Multiply(invertedA);
+            var aByInvertedA = pa.Multiply(invertedA);
             writer.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}\n");
 
             // Find condition numbers of matrix A
             writer.WriteLine("Condition number of matrix A:");
-            writer.WriteLine($"cond-1(A) = {a.Cond1(invertedA)}");
-            writer.WriteLine($"cond-2(A) = {a.Cond2(invertedA)}");
-            writer.WriteLine($"cond-3(A) = {a.Cond3(invertedA)}\n");
+            writer.WriteLine($"cond-1(A) = {pa.Cond1(invertedA)}");
+            writer.WriteLine($"cond-2(A) = {pa.Cond2(invertedA)}");
+            writer.WriteLine($"cond-3(A) = {pa.Cond3(invertedA)}\n");
 
             // Find A*x-b
             var dif = a.Multiply(computedX);
