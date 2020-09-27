@@ -92,20 +92,22 @@ namespace SLAE.DirectMethods
             writer.WriteLine($"x:\n{computedX.ToPrettyString()}\n");
 
             // Find A^(-1)
-            var e = pa.CreateOneMatrix();
-            var y2 = l.FindY(e);
+            var pe = pa.CreateOneMatrix();
+            pe.ApplySwaps(p);
+            var y2 = l.FindY(pe);
             var invertedA = u.FindX(y2);
+            writer.WriteLine($"A:\n{a.ToPrettyString()}\n");
             writer.WriteLine($"A^(-1):\n{invertedA.ToPrettyString()}\n");
 
             // Check that A*A^(-1) = E
-            var aByInvertedA = pa.Multiply(invertedA);
+            var aByInvertedA = a.Multiply(invertedA);
             writer.WriteLine($"A*A^(-1):\n{aByInvertedA.ToPrettyString()}\n");
 
             // Find condition numbers of matrix A
             writer.WriteLine("Condition number of matrix A:");
-            writer.WriteLine($"cond-1(A) = {pa.Cond1(invertedA)}");
-            writer.WriteLine($"cond-2(A) = {pa.Cond2(invertedA)}");
-            writer.WriteLine($"cond-3(A) = {pa.Cond3(invertedA)}\n");
+            writer.WriteLine($"cond-1(A) = {a.Cond1(invertedA)}");
+            writer.WriteLine($"cond-2(A) = {a.Cond2(invertedA)}");
+            writer.WriteLine($"cond-3(A) = {a.Cond3(invertedA)}\n");
 
             // Find A*x-b
             var dif = a.Multiply(computedX);
