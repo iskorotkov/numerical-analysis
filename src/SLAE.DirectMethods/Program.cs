@@ -38,6 +38,8 @@ namespace SLAE.DirectMethods
             var p = a.CreateSwapMatrix();
             var rank = l.Rows();
 
+            var determinantMultiplier = 1;
+
             // Make LU decomposition
             for (var row = 0; row < u.Rows(); row++)
             {
@@ -51,6 +53,7 @@ namespace SLAE.DirectMethods
 
                 if (rowToSwap != row)
                 {
+                    determinantMultiplier *= -1;
                     u.SwapRows(row, rowToSwap);
                     l.SwapRows(row, rowToSwap);
                     p.SwapRows(row, rowToSwap);
@@ -80,7 +83,7 @@ namespace SLAE.DirectMethods
             writer.WriteLine($"L*U-P*A:\n{lu.ToPrettyString()}\n");
 
             // Print determinant
-            var determinant = l.DiagonalMatrixDeterminant();
+            var determinant = l.DiagonalMatrixDeterminant() * determinantMultiplier;
             writer.WriteLine($"Determinant = {determinant}\n");
 
             // Compute x
