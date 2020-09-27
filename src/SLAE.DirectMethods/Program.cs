@@ -109,14 +109,18 @@ namespace SLAE.DirectMethods
             writer.WriteLine($"cond-2(A) = {a.Cond2(invertedA)}");
             writer.WriteLine($"cond-3(A) = {a.Cond3(invertedA)}\n");
 
-            // Find A*x-b
-            var dif = a.Multiply(computedX);
-            dif.Subtract(b);
-            writer.WriteLine($"A*x-b:\n{dif.ToPrettyString()}\n");
+            // Find residual
+            var residual = b.CreateCopy();
+            var aByComputedX = a.Multiply(computedX);
+            residual.Subtract(aByComputedX);
+            writer.WriteLine($"Residual:\n{residual.ToPrettyString()}\n");
+
+            // Find error
+            var dx = x.CreateCopy();
+            dx.Subtract(computedX);
+            writer.WriteLine($"Error:\n{dx.ToPrettyString()}\n");
 
             // Find relative error
-            var dx = computedX.CreateCopy();
-            dx.Subtract(x);
             dx.Divide(x);
             writer.WriteLine($"Relative error:\n{dx.ToPrettyString()}");
         }
