@@ -107,7 +107,7 @@ namespace SLAE.DirectMethods
             writer.WriteLine("Condition number of matrix A:");
             writer.WriteLine($"cond-1(A) = {a.Cond1(invertedA)}");
             writer.WriteLine($"cond-2(A) = {a.Cond2(invertedA)}");
-            writer.WriteLine($"cond-3(A) = {a.Cond3(invertedA)}\n");
+            writer.WriteLine($"cond-3(A) = {a.Cond3()}\n");
 
             // Find residual
             var residual = b.CreateCopy();
@@ -335,8 +335,13 @@ namespace SLAE.DirectMethods
         public static double Cond2(this double[][] matrix, double[][] invertedMatrix) =>
             matrix.Norm2() * invertedMatrix.Norm2();
 
-        public static double Cond3(this double[][] matrix, double[][] invertedMatrix) =>
-            matrix.Norm3() * invertedMatrix.Norm3();
+        public static double Cond3(this double[][] matrix)
+        {
+            var transposedMatrixByMatrix = matrix.CreateTransposed().Multiply(matrix);
+            var diagonalMatrix = transposedMatrixByMatrix.CreateRotatedDiagonalMatrix(1e-14);
+            var result = FindLargestEigenvalue(diagonalMatrix) / FindSmallestEigenvalue(diagonalMatrix);
+            return Math.Sqrt(result);
+        }
 
         private static double Norm1(this double[][] matrix)
         {
@@ -381,8 +386,8 @@ namespace SLAE.DirectMethods
         private static double Norm3(this double[][] matrix)
         {
             var transposedMatrixByMatrix = matrix.CreateTransposed().Multiply(matrix);
-            var diagonalMatrix = transposedMatrixByMatrix.CreateRotatedDiagonalMatrix(1e-6);
-            return FindLargestEigenvalue(diagonalMatrix);
+            var diagonalMatrix = transposedMatrixByMatrix.CreateRotatedDiagonalMatrix(1e-14);
+            return Math.Sqrt(FindLargestEigenvalue(diagonalMatrix));
         }
 
         private static double FindLargestEigenvalue(double[][] diagonalMatrix)
@@ -396,7 +401,21 @@ namespace SLAE.DirectMethods
                 }
             }
 
-            return Math.Sqrt(result);
+            return result;
+        }
+
+        private static double FindSmallestEigenvalue(double[][] diagonalMatrix)
+        {
+            var result = diagonalMatrix[0][0];
+            for (var row = 0; row < diagonalMatrix.Rows(); row++)
+            {
+                if (Math.Abs(diagonalMatrix[row][row]) < result)
+                {
+                    result = Math.Abs(diagonalMatrix[row][row]);
+                }
+            }
+
+            return result;
         }
     }
 
