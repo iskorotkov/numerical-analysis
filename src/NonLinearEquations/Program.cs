@@ -1,5 +1,5 @@
 ﻿using System;
-
+using SLAE.DirectMethods;
 using static System.Math;
 
 namespace NonLinearEquations
@@ -8,53 +8,116 @@ namespace NonLinearEquations
     {
         private static void Main()
         {
-            new SimpleIterationSolver();
-            new NewtonSolver();
+            var xk = new[]
+            {
+                new[] {-0.1},
+                new[] {0.5}
+            };
+
+            //var alpha = 1.0;
+            //var lambda = 0.5;
+
+            var f = new[]
+            {
+                new Fun2[] {(x, y) => -1 + Sin(y + 0.5)},
+                new Fun2[] {(x, y) => -Cos(x - 2)}
+            };
+
+            var fGrad = new[]
+            {
+                new Fun2[] {(_, _) => 0d, (_, y) => Cos(y + 0.5)},
+                new Fun2[] {(x, _) => Sin(x - 2), (_, _) => 0d}
+            };
+
+            f.SolveWithNewtonMethod(fGrad, xk);
         }
     }
 
-    public class SimpleIterationSolver
+    public delegate double Fun2(double x, double y);
+
+    public static class NewtonMethod
     {
-        public SimpleIterationSolver()
+        public static void SolveWithNewtonMethod(this Fun2[][] f, Fun2[][] fGrad, double[][] xk)
         {
-            var x = -10d;
+            Console.WriteLine(fGrad.Evaluate2(xk).Norm3());
 
-            Func<double, double> f = x => -x + 1;
+            Console.WriteLine("{0,5}|{1,15}|{2,15}|{3,15}|{4,15}|{5,15}",
+                "i", "x", "y", "f1", "f2", "residual");
 
-            var m1 = 1.0; // f.Derivative.Abs.Min;
-            var M1 = 1.0; // f.Derivative.Abs.Max;
-            var tau = 2 / (m1 + M1);
-
-            for (var i = 0; i < 20; i++)
+            for (var i = 1; i <= 10; i++)
             {
-                x = x + tau * Abs(f(x));
-                Console.WriteLine($"i={i}, tau={tau}, x={x}");
+                var fValues = f.Evaluate2(xk);
+                var gradValues = fGrad.Evaluate2(xk);
+                var inverseGradValues = gradValues.CreateInverse();
+
+                xk.Subtract(inverseGradValues.Multiply(fValues));
+
+                fValues = f.Evaluate2(xk);
+                var residual = fValues.Norm3();
+
+                Console.WriteLine("{0,5}|{1,15:G6}|{2,15:G6}|{3,15:G6}|{4,15:G6}|{5,15:G6}",
+                    i, xk[0][0], xk[1][0], fValues[0][0], fValues[1][0], residual);
             }
         }
     }
 
-    public class NewtonSolver
+    public static class Evaluation
     {
-        public NewtonSolver()
+        public static double[][] Evaluate2(this Fun2[][] matrix, double[][] values)
         {
-            var x = -10d;
-
-            Func<double, double> f = x => -x + 1;
-            Func<double, double> fDerivative = x => -1;
-
-            for (var i = 0; i < 20; i++)
+            var (x, y) = (values[0][0], values[1][0]);
+            var copy = matrix.CreateCompatible<Fun2, double>();
+            for (var row = 0; row < matrix.Rows(); row++)
             {
-                x = x - f(x) / fDerivative(x);
-                Console.WriteLine($"i={i}, x={x}");
+                for (var column = 0; column < matrix.Columns(); column++)
+                {
+                    copy[row][column] = matrix[row][column](x, y);
+                }
             }
+
+            return copy;
         }
     }
 
-    // TODO: Implement gradient descend method
-    public class GradientDescend
+    public static class MatrixMath
     {
-        public GradientDescend()
+        public static double[][] CreateInverse(this double[][] a)
         {
+            var l = a.CreateCompatible();
+            var u = a.CreateCopy();
+            var p = a.CreateSwapMatrix();
+
+            // Make LU decomposition
+            for (var row = 0; row < u.Rows(); row++)
+            {
+                var rowToSwap = u.RowToSwapWith(row);
+
+                if (rowToSwap != row)
+                {
+                    u.SwapRows(row, rowToSwap);
+                    l.SwapRows(row, rowToSwap);
+                    p.SwapRows(row, rowToSwap);
+                }
+
+                l.FillColumn(u, row);
+
+                u.SubtractRow(row);
+                u.NormalizeRow(row);
+            }
+
+            var pa = a.CreateCopy();
+            pa.ApplySwaps(p);
+
+            // Check that LU = PA
+            var lu = l.Multiply(u);
+            lu.Subtract(pa);
+
+            // Find A^(-1)
+            var pe = pa.CreateOneMatrix();
+            pe.ApplySwaps(p);
+            var y2 = l.FindY(pe);
+            var invertedA = u.FindX(y2);
+            return invertedA;
         }
     }
 }
