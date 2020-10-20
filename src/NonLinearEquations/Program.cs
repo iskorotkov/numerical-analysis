@@ -10,8 +10,8 @@ namespace NonLinearEquations
         {
             var xk = new[]
             {
-                new[] {-0.1},
-                new[] {0.5}
+                new[] {0.4},
+                new[] {1.0}
             };
 
             //var alpha = 1.0;
@@ -29,11 +29,36 @@ namespace NonLinearEquations
                 new Fun2[] {(x, _) => Sin(x - 2), (_, _) => 0d}
             };
 
-            f.SolveWithNewtonMethod(fGrad, xk);
+            var tau = fGrad.Evaluate2(xk);
+
+            f.SolveWithNewtonMethod(fGrad, xk.CreateCopy());
+            f.SolveWithSimpleIterationMethod(tau, xk.CreateCopy());
         }
     }
 
     public delegate double Fun2(double x, double y);
+
+    public static class SimpleIterationMethod
+    {
+        public static void SolveWithSimpleIterationMethod(this Fun2[][] f, double[][] tau, double[][] xk)
+        {
+            Console.WriteLine("{0,5}|{1,15}|{2,15}|{3,15}|{4,15}|{5,15}",
+                "i", "x", "y", "f1", "f2", "residual");
+
+            for (var i = 1; i <= 100; i++)
+            {
+                var fValues = f.Evaluate2(xk);
+
+                xk.Add(tau.Multiply(fValues));
+
+                fValues = f.Evaluate2(xk);
+                var residual = fValues.Norm3();
+
+                Console.WriteLine("{0,5}|{1,15:G6}|{2,15:G6}|{3,15:G6}|{4,15:G6}|{5,15:G6}",
+                    i, xk[0][0], xk[1][0], fValues[0][0], fValues[1][0], residual);
+            }
+        }
+    }
 
     public static class NewtonMethod
     {
