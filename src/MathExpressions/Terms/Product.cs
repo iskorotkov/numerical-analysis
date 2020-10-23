@@ -14,10 +14,10 @@
                 new Product(_leftArg.Grad(), _rightArg),
                 new Product(_leftArg, _rightArg.Grad()));
 
-        public ITerm GradBy(ITerm variable) =>
+        public ITerm GradBy(Var v) =>
             new Sum(
-                new Product(_leftArg.GradBy(variable), _rightArg),
-                new Product(_leftArg, _rightArg.GradBy(variable)));
+                new Product(_leftArg.GradBy(v), _rightArg),
+                new Product(_leftArg, _rightArg.GradBy(v)));
 
         public override string ToString() => $"({_leftArg}) * ({_rightArg})";
     }

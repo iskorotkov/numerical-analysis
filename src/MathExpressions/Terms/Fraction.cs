@@ -16,11 +16,11 @@
                     new Product(_leftArg, _rightArg.Grad())),
                 new Product(_rightArg, _rightArg));
 
-        public ITerm GradBy(ITerm variable) =>
+        public ITerm GradBy(Var v) =>
             new Fraction(
                 new Diff(
-                    new Product(_leftArg.GradBy(variable), _rightArg),
-                    new Product(_leftArg, _rightArg.GradBy(variable))),
+                    new Product(_leftArg.GradBy(v), _rightArg),
+                    new Product(_leftArg, _rightArg.GradBy(v))),
                 new Product(_rightArg, _rightArg));
 
         public override string ToString() => $"({_leftArg}) / ({_rightArg})";

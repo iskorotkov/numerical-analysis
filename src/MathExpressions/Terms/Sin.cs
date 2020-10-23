@@ -9,7 +9,7 @@ namespace MathExpressions.Terms
         public Sin(ITerm arg) => _arg = arg;
         public double Evaluate(double[][] x) => Math.Sin(_arg.Evaluate(x));
         public ITerm Grad() => new Product(new Cos(_arg), _arg.Grad());
-        public ITerm GradBy(ITerm variable) => new Product(new Cos(_arg), _arg.GradBy(variable));
+        public ITerm GradBy(Var v) => new Product(new Cos(_arg), _arg.GradBy(v));
 
         public override string ToString() => $"sin({_arg})";
     }

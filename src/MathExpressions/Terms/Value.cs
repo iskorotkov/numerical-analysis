@@ -10,7 +10,7 @@ namespace MathExpressions.Terms
 
         public double Evaluate(double[][] x) => _value;
         public ITerm Grad() => new Value(0d);
-        public ITerm GradBy(ITerm variable) => new Value(0d);
+        public ITerm GradBy(Var v) => new Value(0d);
 
         public override string ToString() => _value.ToString(CultureInfo.InvariantCulture);
     }
