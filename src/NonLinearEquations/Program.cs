@@ -10,6 +10,8 @@ namespace NonLinearEquations
     {
         private static void Main()
         {
+            const double epsilon = 1e-4;
+
             var values = new[]
             {
                 new[] {-0.1},
@@ -50,12 +52,6 @@ namespace NonLinearEquations
                 new[] {fi2.GradBy(new Var(0)), fi2.GradBy(new Var(1))}
             };
 
-            PrintHeader(values, parameters);
-
-            f.SolveWithSimpleIterationMethod(fi, fiGrad, values.CreateCopy());
-
-            f.SolveWithNewtonMethod(fGrad, values.CreateCopy());
-
             var minF = f1 * f1 + f2 * f2;
             var minFGrad = new[]
             {
@@ -63,7 +59,15 @@ namespace NonLinearEquations
                 new[] {minF.GradBy(new Var(1))}
             };
 
-            minF.SolveWithGradientDescendMethod(minFGrad, f, parameters, values.CreateCopy());
+            PrintHeader(values, parameters);
+
+            var simpleIteration = new SimpleIterationSolver(epsilon);
+            var newton = new NewtonSolver(epsilon);
+            var gradientDescend = new GradientDescendSolver(epsilon, parameters);
+
+            simpleIteration.Solve(f, fi, fiGrad, values.CreateCopy());
+            newton.Solve(f, fGrad, values.CreateCopy());
+            gradientDescend.Solve(minF, minFGrad, f, values.CreateCopy());
         }
 
         private static void PrintHeader(double[][] values, GradientDescendParameters parameters)
@@ -73,15 +77,13 @@ namespace NonLinearEquations
         }
     }
 
-    public class GradientDescendParameters
+    public class SimpleIterationSolver
     {
-        public double Alpha { get; set; } = 1.0;
-        public double Lambda { get; set; } = 0.5;
-    }
+        private readonly double _eps;
 
-    public static class SimpleIterationMethod
-    {
-        public static void SolveWithSimpleIterationMethod(this ITerm[][] f, ITerm[][] fi, ITerm[][] fiGrad,
+        public SimpleIterationSolver(double epsilon) => _eps = epsilon;
+
+        public void Solve(ITerm[][] f, ITerm[][] fi, ITerm[][] fiGrad,
             double[][] values)
         {
             Console.WriteLine("\n=== Simple iteration method ===");
@@ -114,18 +116,28 @@ namespace NonLinearEquations
 
                 xDiff = previousValues;
                 xDiff.Subtract(values);
-            } while (!xDiff.Converged());
+            } while (!Converged(xDiff));
         }
 
-        private static bool Converged(this double[][] xDiff, double eps = 1e-4) =>
+        private bool Converged(double[][] xDiff) =>
             xDiff.All(row => row
                 .Select(Math.Abs)
-                .All(value => value < eps));
+                .All(value => value < _eps));
     }
 
-    public static class NewtonMethod
+    public class GradientDescendParameters
     {
-        public static void SolveWithNewtonMethod(this ITerm[][] f, ITerm[][] fGrad, double[][] values)
+        public double Alpha { get; set; } = 1.0;
+        public double Lambda { get; set; } = 0.5;
+    }
+
+    public class NewtonSolver
+    {
+        private readonly double _eps;
+
+        public NewtonSolver(double epsilon) => _eps = epsilon;
+
+        public void Solve(ITerm[][] f, ITerm[][] fGrad, double[][] values)
         {
             Console.WriteLine("\n=== Newton method ===\n");
 
@@ -148,19 +160,24 @@ namespace NonLinearEquations
 
                 Console.WriteLine(
                     $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}");
-            } while (!previousFValues.Converged());
+            } while (!Converged(previousFValues));
         }
 
-        private static bool Converged(this double[][] previousFValues, double eps = 1e-4) =>
+        private bool Converged(double[][] previousFValues) =>
             previousFValues.All(row => row
                 .Select(Math.Abs)
-                .All(value => value < eps));
+                .All(value => value < _eps));
     }
 
-    public static class GradientDescendMethod
+    public class GradientDescendSolver
     {
-        public static void SolveWithGradientDescendMethod(this ITerm minF, ITerm[][] minFGrad, ITerm[][] f,
-            GradientDescendParameters parameters, double[][] values)
+        private readonly double _eps;
+        private readonly GradientDescendParameters _parameters;
+
+        public GradientDescendSolver(double epsilon, GradientDescendParameters parameters) =>
+            (_eps, _parameters) = (epsilon, parameters);
+
+        public void Solve(ITerm minF, ITerm[][] minFGrad, ITerm[][] f, double[][] values)
         {
             Console.WriteLine("\n=== Gradient descend method ===");
 
@@ -176,13 +193,13 @@ namespace NonLinearEquations
             {
                 i++;
 
-                var newValues = MakeIteration(minFGrad, parameters, values);
+                var newValues = MakeIteration(minFGrad, values);
 
                 while (minF.Evaluate(newValues) >= minF.Evaluate(values))
                 {
                     k++;
-                    parameters.Alpha *= parameters.Lambda;
-                    newValues = minFGrad.MakeIteration(parameters, values);
+                    _parameters.Alpha *= _parameters.Lambda;
+                    newValues = MakeIteration(minFGrad, values);
                 }
 
                 var previousX = values;
@@ -193,25 +210,24 @@ namespace NonLinearEquations
                 var minFValue = minF.Evaluate(values);
 
                 Console.WriteLine(
-                    $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{parameters.Alpha,15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{minFValue,15:G6}{k,3}");
+                    $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{_parameters.Alpha,15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{minFValue,15:G6}{k,3}");
 
                 xDiff = previousX;
                 xDiff.Subtract(values);
-            } while (!xDiff.Converged());
+            } while (!Converged(xDiff));
         }
 
-        private static double[][] MakeIteration(this ITerm[][] minFGrad, GradientDescendParameters parameters,
-            double[][] values)
+        private double[][] MakeIteration(ITerm[][] minFGrad, double[][] values)
         {
             var gradValues = minFGrad.Evaluate(values);
-            gradValues.Multiply(parameters.Alpha);
+            gradValues.Multiply(_parameters.Alpha);
 
             var newValues = values.CreateCopy();
             newValues.Subtract(gradValues);
             return newValues;
         }
 
-        private static bool Converged(this double[][] xDiff, double eps = 1e-4) => xDiff.Norm3() < eps;
+        private bool Converged(double[][] xDiff) => xDiff.Norm3() < _eps;
     }
 
     public static class Evaluation
