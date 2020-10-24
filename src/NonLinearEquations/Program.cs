@@ -18,26 +18,32 @@ namespace NonLinearEquations
             var y = T.Var(1);
 
             // sample
-            //var f1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5) - T.Var(0);
-            //var f2 = -T.Cos(T.Var(0) - 2) - T.Var(1);
-            //var values = new[]
-            //{
-            //    new[] {-0.1},
-            //    new[] {0.5}
-            //};
-
-            // variant 8
-            var f1 = 2 * y - T.Cos(x + 1);
-            var f2 = x + T.Sin(y) + 0.4;
+            var f1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5) - T.Var(0);
+            var f2 = -T.Cos(T.Var(0) - 2) - T.Var(1);
+            var fi1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5);
+            var fi2 = -T.Cos(T.Var(0) - 2);
             var values = new[]
             {
-                new[] {-0.9},
+                new[] {-0.1},
                 new[] {0.5}
             };
+
+            // variant 8
+            //var f1 = 2 * y - T.Cos(x + 1);
+            //var f2 = x + T.Sin(y) + 0.4;
+            //var fi1 = -T.Sin(y) - 0.4;
+            //var fi2 = T.Cos(x + 1) / 2;
+            //var values = new[]
+            //{
+            //    new[] {-0.9},
+            //    new[] {0.5}
+            //};
 
             // variant 9
             //var f1 = T.Cos(x + 0.5) - y - 2;
             //var f2 = T.Sin(y) - 2 * x - 1;
+            //var fi1 = (T.Sin(y) - 1) / 2;
+            //var fi2 = T.Cos(x + 0.5) - 2;
             //var values = new[]
             //{
             //    new[] {-0.9},
@@ -60,9 +66,6 @@ namespace NonLinearEquations
                 new[] {f1.GradBy(x), f1.GradBy(y)},
                 new[] {f2.GradBy(x), f2.GradBy(y)}
             };
-
-            var fi1 = x + f1;
-            var fi2 = y + f2;
 
             var fi = new[]
             {
