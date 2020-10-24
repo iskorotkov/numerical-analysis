@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using MathExpressions;
 using MathExpressions.Terms;
 using SLAE.DirectMethods;
@@ -88,12 +89,19 @@ namespace NonLinearEquations
             var jakobi = fiGrad.Evaluate(values);
             Console.WriteLine("\nJakobi:");
             Console.WriteLine(jakobi.ToPrettyString());
-            Console.WriteLine($"\nJakobi norm = {jakobi.Norm3()}\n");
+
+            var q = jakobi.Norm3();
+            Console.WriteLine($"\nJakobi norm = {q}\n");
 
             Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}{"jakobi norm",15}");
 
-            for (var i = 1; i <= 20; i++)
+            var i = 0;
+            double[][] xDiff;
+            do
             {
+                i++;
+
+                var previousValues = values;
                 values = fi.Evaluate(values);
 
                 var fValues = f.Evaluate(values);
@@ -103,8 +111,16 @@ namespace NonLinearEquations
 
                 Console.WriteLine(
                     $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{residualNorm,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{jakobiNorm,15:G6}");
-            }
+
+                xDiff = previousValues;
+                xDiff.Subtract(values);
+            } while (!xDiff.Converged());
         }
+
+        private static bool Converged(this double[][] xDiff, double eps = 1e-4) =>
+            xDiff.All(row => row
+                .Select(Math.Abs)
+                .All(value => value < eps));
     }
 
     public static class NewtonMethod
@@ -115,20 +131,30 @@ namespace NonLinearEquations
 
             Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}");
 
+            var i = 0;
             var fValues = f.Evaluate(values);
-            for (var i = 1; i <= 10; i++)
+            double[][] previousFValues;
+            do
             {
+                i++;
+
                 var gradValues = fGrad.Evaluate(values);
                 var inverseGradValues = gradValues.CreateInverse();
                 values.Subtract(inverseGradValues.Multiply(fValues));
 
+                previousFValues = fValues;
                 fValues = f.Evaluate(values);
                 var residual = fValues.Norm3();
 
                 Console.WriteLine(
                     $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}");
-            }
+            } while (!previousFValues.Converged());
         }
+
+        private static bool Converged(this double[][] previousFValues, double eps = 1e-4) =>
+            previousFValues.All(row => row
+                .Select(Math.Abs)
+                .All(value => value < eps));
     }
 
     public static class GradientDescendMethod
@@ -144,8 +170,12 @@ namespace NonLinearEquations
             Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"alpha",15}{"residual",15}{"f1",15}{"f2",15}{"F",15}{"k",3}");
 
             var k = 0;
-            for (var i = 1; i <= 20; i++)
+            var i = 0;
+            double[][] xDiff;
+            do
             {
+                i++;
+
                 var newValues = MakeIteration(minFGrad, parameters, values);
 
                 while (minF.Evaluate(newValues) >= minF.Evaluate(values))
@@ -155,14 +185,19 @@ namespace NonLinearEquations
                     newValues = minFGrad.MakeIteration(parameters, values);
                 }
 
+                var previousX = values;
                 values = newValues;
+
                 var fValues = f.Evaluate(values);
                 var residual = fValues.Norm3();
                 var minFValue = minF.Evaluate(values);
 
                 Console.WriteLine(
                     $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{parameters.Alpha,15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{minFValue,15:G6}{k,3}");
-            }
+
+                xDiff = previousX;
+                xDiff.Subtract(values);
+            } while (!xDiff.Converged());
         }
 
         private static double[][] MakeIteration(this ITerm[][] minFGrad, GradientDescendParameters parameters,
@@ -175,6 +210,8 @@ namespace NonLinearEquations
             newValues.Subtract(gradValues);
             return newValues;
         }
+
+        private static bool Converged(this double[][] xDiff, double eps = 1e-4) => xDiff.Norm3() < eps;
     }
 
     public static class Evaluation
