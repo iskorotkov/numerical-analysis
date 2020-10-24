@@ -2,7 +2,6 @@
 using MathExpressions;
 using MathExpressions.Terms;
 using SLAE.DirectMethods;
-using Console = System.Console;
 
 namespace NonLinearEquations
 {
@@ -16,17 +15,14 @@ namespace NonLinearEquations
                 new[] {0.5}
             };
 
+            var f1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5) - T.Var(0);
+            var f2 = -T.Cos(T.Var(0) - 2) - T.Var(1);
+
             var parameters = new GradientDescendParameters
             {
                 Alpha = 1.0,
                 Lambda = 0.5
             };
-
-            var x = T.Var(0);
-            var y = T.Var(1);
-
-            var f1 = -T.Value(1) + T.Sin(y + 0.5) - x;
-            var f2 = -T.Cos(x - 2) - y;
 
             var f = new[]
             {
@@ -35,12 +31,12 @@ namespace NonLinearEquations
             };
             var fGrad = new[]
             {
-                new[] {f1.GradBy((Var) x), f1.GradBy((Var) y)},
-                new[] {f2.GradBy((Var) x), f2.GradBy((Var) y)}
+                new[] {f1.GradBy(new Var(0)), f1.GradBy(new Var(1))},
+                new[] {f2.GradBy(new Var(0)), f2.GradBy(new Var(1))}
             };
 
-            var fi1 = x + f1;
-            var fi2 = y + f2;
+            var fi1 = T.Var(0) + f1;
+            var fi2 = T.Var(1) + f2;
 
             var fi = new[]
             {
@@ -49,8 +45,8 @@ namespace NonLinearEquations
             };
             var fiGrad = new[]
             {
-                new[] {fi1.GradBy((Var) x), fi1.GradBy((Var) y)},
-                new[] {fi2.GradBy((Var) x), fi2.GradBy((Var) y)}
+                new[] {fi1.GradBy(new Var(0)), fi1.GradBy(new Var(1))},
+                new[] {fi2.GradBy(new Var(0)), fi2.GradBy(new Var(1))}
             };
 
             PrintHeader(values, parameters);
@@ -59,20 +55,20 @@ namespace NonLinearEquations
 
             f.SolveWithNewtonMethod(fGrad, values.CreateCopy());
 
-            var minimizedF = f1 * f1 + f2 * f2;
-            var minimizedGrad = new[]
+            var minF = f1 * f1 + f2 * f2;
+            var minFGrad = new[]
             {
-                new[] {minimizedF.GradBy((Var) x)},
-                new[] {minimizedF.GradBy((Var) y)}
+                new[] {minF.GradBy(new Var(0))},
+                new[] {minF.GradBy(new Var(1))}
             };
 
-            minimizedF.SolveWithGradientDescendMethod(minimizedGrad, parameters, values.CreateCopy());
+            minF.SolveWithGradientDescendMethod(minFGrad, f, parameters, values.CreateCopy());
         }
 
         private static void PrintHeader(double[][] values, GradientDescendParameters parameters)
         {
-            Console.WriteLine($"x:\n{values.ToPrettyString()}\n");
-            Console.WriteLine($"Parameters:\n\talpha={parameters.Alpha}\n\tlambda={parameters.Lambda}\n");
+            Console.WriteLine($"x:\n{values.ToPrettyString()}");
+            Console.WriteLine($"\nParameters:\n\talpha = {parameters.Alpha}\n\tlambda = {parameters.Lambda}");
         }
     }
 
@@ -84,28 +80,29 @@ namespace NonLinearEquations
 
     public static class SimpleIterationMethod
     {
-        public static void SolveWithSimpleIterationMethod(this ITerm[][] f,  ITerm[][] fi, ITerm[][] fiGrad,
+        public static void SolveWithSimpleIterationMethod(this ITerm[][] f, ITerm[][] fi, ITerm[][] fiGrad,
             double[][] values)
         {
-            Console.WriteLine("Simple iteration method\n");
+            Console.WriteLine("\n=== Simple iteration method ===");
 
             var jakobi = fiGrad.Evaluate(values);
-            Console.WriteLine("Jakobi:");
-            Console.WriteLine($"{jakobi.ToPrettyString()}\n");
-            Console.WriteLine($"Norm = {jakobi.Norm3()}\n");
+            Console.WriteLine("\nJakobi:");
+            Console.WriteLine(jakobi.ToPrettyString());
+            Console.WriteLine($"\nJakobi norm = {jakobi.Norm3()}\n");
 
-            Console.WriteLine("{0,5}|{1,15}|{2,15}|{3,15}|{4,15}|{5,15}",
-                "i", "x", "y", "f1", "f2", "residual");
+            Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}{"jakobi norm",15}");
 
             for (var i = 1; i <= 20; i++)
             {
                 values = fi.Evaluate(values);
 
                 var fValues = f.Evaluate(values);
-                var residual = fValues.Norm3();
+                var residualNorm = fValues.Norm3();
+                var jakobiValues = fiGrad.Evaluate(values);
+                var jakobiNorm = jakobiValues.Norm3();
 
-                Console.WriteLine("{0,5}|{1,15:G6}|{2,15:G6}|{3,15:G6}|{4,15:G6}|{5,15:G6}",
-                    i, values[0][0], values[1][0], fValues[0][0], fValues[1][0], residual);
+                Console.WriteLine(
+                    $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{residualNorm,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{jakobiNorm,15:G6}");
             }
         }
     }
@@ -114,57 +111,69 @@ namespace NonLinearEquations
     {
         public static void SolveWithNewtonMethod(this ITerm[][] f, ITerm[][] fGrad, double[][] values)
         {
-            Console.WriteLine("{0,5}|{1,15}|{2,15}|{3,15}|{4,15}|{5,15}",
-                "i", "x", "y", "f1", "f2", "residual");
+            Console.WriteLine("\n=== Newton method ===\n");
 
+            Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}");
+
+            var fValues = f.Evaluate(values);
             for (var i = 1; i <= 10; i++)
             {
-                var fValues = f.Evaluate(values);
                 var gradValues = fGrad.Evaluate(values);
                 var inverseGradValues = gradValues.CreateInverse();
-
                 values.Subtract(inverseGradValues.Multiply(fValues));
 
                 fValues = f.Evaluate(values);
                 var residual = fValues.Norm3();
 
-                Console.WriteLine("{0,5}|{1,15:G6}|{2,15:G6}|{3,15:G6}|{4,15:G6}|{5,15:G6}",
-                    i, values[0][0], values[1][0], fValues[0][0], fValues[1][0], residual);
+                Console.WriteLine(
+                    $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}");
             }
         }
     }
 
     public static class GradientDescendMethod
     {
-        public static void SolveWithGradientDescendMethod(this ITerm f, ITerm[][] fGrad,
+        public static void SolveWithGradientDescendMethod(this ITerm minF, ITerm[][] minFGrad, ITerm[][] f,
             GradientDescendParameters parameters, double[][] values)
         {
-            Console.WriteLine("{0,5}|{1,15}|{2,15}|{3,15}|{4,15}",
-                "i", "x", "y", "F", "alpha");
+            Console.WriteLine("\n=== Gradient descend method ===");
 
+            var gradient = minFGrad.Evaluate(values);
+            Console.WriteLine($"\nGradient vector:\n{gradient.ToPrettyString()}\n");
+
+            Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"alpha",15}{"residual",15}{"f1",15}{"f2",15}{"F",15}{"k",3}");
+
+            var k = 0;
             for (var i = 1; i <= 20; i++)
             {
-                var gradValues = fGrad.Evaluate(values);
-                gradValues.Multiply(parameters.Alpha);
-                var arg = values.CreateCopy();
-                arg.Subtract(gradValues);
+                var newValues = MakeIteration(minFGrad, parameters, values);
 
-                while (f.Evaluate(arg) >= f.Evaluate(values))
+                while (minF.Evaluate(newValues) >= minF.Evaluate(values))
                 {
+                    k++;
                     parameters.Alpha *= parameters.Lambda;
-
-                    gradValues = fGrad.Evaluate(values);
-                    gradValues.Multiply(parameters.Alpha);
-                    arg = values.CreateCopy();
-                    arg.Subtract(gradValues);
+                    newValues = minFGrad.MakeIteration(parameters, values);
                 }
 
-                values = arg;
-                var value = f.Evaluate(values);
+                values = newValues;
+                var fValues = f.Evaluate(values);
+                var residual = fValues.Norm3();
+                var minFValue = minF.Evaluate(values);
 
-                Console.WriteLine("{0,5}|{1,15:G6}|{2,15:G6}|{3,15:G6}|{4,15:G6}",
-                    i, values[0][0], values[1][0], value, parameters.Alpha);
+                Console.WriteLine(
+                    $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{parameters.Alpha,15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{minFValue,15:G6}{k,3}");
             }
+        }
+
+        private static double[][] MakeIteration(this ITerm[][] minFGrad, GradientDescendParameters parameters,
+            double[][] values)
+        {
+            var gradValues = minFGrad.Evaluate(values);
+            gradValues.Multiply(parameters.Alpha);
+
+            var newValues = values.CreateCopy();
+            newValues.Subtract(gradValues);
+            return newValues;
         }
     }
 
