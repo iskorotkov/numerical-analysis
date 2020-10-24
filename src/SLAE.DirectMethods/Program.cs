@@ -7,8 +7,8 @@ namespace SLAE.DirectMethods
 {
     internal static class Program
     {
-        private const string InputFile = "data/in.txt";
-        private const string OutputFile = "data/out.txt";
+        private const string InputFile = "../../../data/in.txt";
+        private const string OutputFile = "../../../data/out.txt";
 
         private static void Main()
         {
@@ -68,6 +68,7 @@ namespace SLAE.DirectMethods
                 writer.WriteLine($"L:\n{l.ToPrettyString()}\n");
             }
 
+            p = p.Select(val => val + 1).ToArray();
             writer.WriteLine($"P:\n{p.ToPrettyString()}\n");
             writer.WriteLine($"Rank = {rank}\n");
 
@@ -131,7 +132,7 @@ namespace SLAE.DirectMethods
         public static double[][] ReadMatrix(StreamReader reader)
         {
             var dimension = int.Parse(reader.ReadLine()!);
-            var matrix = CreateEmptyMatrix(dimension, dimension);
+            var matrix = CreateEmptyMatrix<double>(dimension, dimension);
             for (var row = 0; row < dimension; row++)
             {
                 var line = reader.ReadLine();
@@ -148,12 +149,12 @@ namespace SLAE.DirectMethods
             return matrix;
         }
 
-        private static double[][] CreateEmptyMatrix(int rows, int columns)
+        public static T[][] CreateEmptyMatrix<T>(int rows, int columns)
         {
-            var result = new double[rows][];
+            var result = new T[rows][];
             for (var row = 0; row < rows; row++)
             {
-                result[row] = new double[columns];
+                result[row] = new T[columns];
             }
 
             return result;
@@ -255,6 +256,17 @@ namespace SLAE.DirectMethods
             return result;
         }
 
+        public static void Add(this double[][] x, double[][] y)
+        {
+            for (var row = 0; row < x.Rows(); row++)
+            {
+                for (var column = 0; column < x.Columns(); column++)
+                {
+                    x[row][column] += y[row][column];
+                }
+            }
+        }
+
         public static void Subtract(this double[][] x, double[][] y)
         {
             for (var row = 0; row < x.Rows(); row++)
@@ -292,7 +304,7 @@ namespace SLAE.DirectMethods
 
     public static class MatrixFormatting
     {
-        public static string ToPrettyString(this double[][] x)
+        public static string ToPrettyString<T>(this T[][] x)
         {
             var builder = new StringBuilder();
             for (var row = 0; row < x.Rows(); row++)
@@ -311,12 +323,12 @@ namespace SLAE.DirectMethods
             return builder.ToString();
         }
 
-        public static string ToPrettyString(this int[] matrix)
+        public static string ToPrettyString<T>(this T[] matrix)
         {
             var builder = new StringBuilder();
             for (var row = 0; row < matrix.Length; row++)
             {
-                builder.AppendFormat("{0,15:g6};", matrix[row] + 1);
+                builder.AppendFormat("{0,15:g6};", matrix[row]);
                 if (row != matrix.Length - 1)
                 {
                     builder.Append('\n');
@@ -343,7 +355,7 @@ namespace SLAE.DirectMethods
             return Math.Sqrt(result);
         }
 
-        private static double Norm1(this double[][] matrix)
+        public static double Norm1(this double[][] matrix)
         {
             var result = 0.0;
             for (var row = 0; row < matrix.Rows(); row++)
@@ -363,7 +375,7 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        private static double Norm2(this double[][] matrix)
+        public static double Norm2(this double[][] matrix)
         {
             var result = 0.0;
             for (var column = 0; column < matrix.Rows(); column++)
@@ -383,14 +395,14 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        private static double Norm3(this double[][] matrix)
+        public static double Norm3(this double[][] matrix)
         {
             var transposedMatrixByMatrix = matrix.CreateTransposed().Multiply(matrix);
             var diagonalMatrix = transposedMatrixByMatrix.CreateRotatedDiagonalMatrix(1e-14);
             return Math.Sqrt(FindLargestEigenvalue(diagonalMatrix));
         }
 
-        private static double FindLargestEigenvalue(double[][] diagonalMatrix)
+        public static double FindLargestEigenvalue(double[][] diagonalMatrix)
         {
             var result = 0.0;
             for (var row = 0; row < diagonalMatrix.Rows(); row++)
@@ -404,7 +416,7 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        private static double FindSmallestEigenvalue(double[][] diagonalMatrix)
+        public static double FindSmallestEigenvalue(double[][] diagonalMatrix)
         {
             var result = diagonalMatrix[0][0];
             for (var row = 0; row < diagonalMatrix.Rows(); row++)
@@ -435,7 +447,7 @@ namespace SLAE.DirectMethods
             return targetRow;
         }
 
-        public static void SwapRows(this double[][] matrix, int rowA, int rowB)
+        public static void SwapRows<T>(this T[][] matrix, int rowA, int rowB)
         {
             for (var column = 0; column < matrix.Columns(); column++)
             {
@@ -468,16 +480,16 @@ namespace SLAE.DirectMethods
             matrix[row][row] = 1.0;
         }
 
-        public static void SwapRows(this int[] matrix, int row1, int row2)
+        public static void SwapRows<T>(this T[] matrix, int row1, int row2)
         {
             var temp = matrix[row1];
             matrix[row1] = matrix[row2];
             matrix[row2] = temp;
         }
 
-        public static void ApplySwaps(this double[][] matrix, int[] swaps)
+        public static void ApplySwaps<T>(this T[][] matrix, int[] swaps)
         {
-            var result = new double[matrix.Rows()][];
+            var result = new T[matrix.Rows()][];
             for (var i = 0; i < matrix.Rows(); i++)
             {
                 var index = swaps[i];
@@ -493,14 +505,14 @@ namespace SLAE.DirectMethods
 
     public static class MatrixCreation
     {
-        public static double[][] CreateTransposed(this double[][] matrix)
+        public static T[][] CreateTransposed<T>(this T[][] matrix)
         {
             var rows = matrix.Columns();
             var columns = matrix.Rows();
-            var result = new double[rows][];
+            var result = new T[rows][];
             for (var row = 0; row < rows; row++)
             {
-                result[row] = new double[columns];
+                result[row] = new T[columns];
                 for (var column = 0; column < columns; column++)
                 {
                     result[row][column] = matrix[column][row];
@@ -521,7 +533,7 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        public static double[][] CreateCopy(this double[][] matrix)
+        public static T[][] CreateCopy<T>(this T[][] matrix)
         {
             var result = matrix.CreateCompatible();
             for (var row = 0; row < matrix.Rows(); row++)
@@ -535,12 +547,14 @@ namespace SLAE.DirectMethods
             return result;
         }
 
-        public static double[][] CreateCompatible(this double[][] matrix)
+        public static T[][] CreateCompatible<T>(this T[][] matrix) => matrix.CreateCompatible<T, T>();
+
+        public static TReturnType[][] CreateCompatible<TMatrixType, TReturnType>(this TMatrixType[][] matrix)
         {
-            var result = new double[matrix.Rows()][];
+            var result = new TReturnType[matrix.Rows()][];
             for (var row = 0; row < matrix.Rows(); row++)
             {
-                result[row] = new double[matrix.Columns()];
+                result[row] = new TReturnType[matrix.Columns()];
             }
 
             return result;
@@ -609,7 +623,7 @@ namespace SLAE.DirectMethods
 
     public static class MatrixExtensions
     {
-        public static int Rows(this double[][] x) => x.Length;
-        public static int Columns(this double[][] x) => x[0].Length;
+        public static int Rows<T>(this T[][] x) => x.Length;
+        public static int Columns<T>(this T[][] x) => x[0].Length;
     }
 }
