@@ -14,14 +14,18 @@ namespace NonLinearEquations
             const double epsilon = 1e-4;
             const string outputFileName = "../../../data/output.txt";
 
+            // Variables that are used in equations (needed for correct auto differentiation)
             var x = T.Var(0);
             var y = T.Var(1);
 
             // sample
+            // Functions f(x, y)
             var f1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5) - T.Var(0);
             var f2 = -T.Cos(T.Var(0) - 2) - T.Var(1);
+            // Functions fi(x, y) (for simple iteration method)
             var fi1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5);
             var fi2 = -T.Cos(T.Var(0) - 2);
+            // Approximated root of system of equations
             var values = new[]
             {
                 new[] {-0.1},
@@ -29,10 +33,13 @@ namespace NonLinearEquations
             };
 
             // variant 8
+            // Functions f(x, y)
             //var f1 = 2 * y - T.Cos(x + 1);
             //var f2 = x + T.Sin(y) + 0.4;
+            // Functions fi(x, y) (for simple iteration method)
             //var fi1 = -T.Sin(y) - 0.4;
             //var fi2 = T.Cos(x + 1) / 2;
+            // Approximated root of system of equations
             //var values = new[]
             //{
             //    new[] {-0.9},
@@ -40,65 +47,73 @@ namespace NonLinearEquations
             //};
 
             // variant 9
+            // Functions f(x, y)
             //var f1 = T.Cos(x + 0.5) - y - 2;
             //var f2 = T.Sin(y) - 2 * x - 1;
+            // Functions fi(x, y) (for simple iteration method)
             //var fi1 = (T.Sin(y) - 1) / 2;
             //var fi2 = T.Cos(x + 0.5) - 2;
+            // Approximated root of system of equations
             //var values = new[]
             //{
             //    new[] {-0.9},
             //    new[] {-1.1}
             //};
 
+            // Parameters for gradient descend method
             var parameters = new GradientDescendParameters
             {
                 Alpha = 1.0,
                 Lambda = 0.5
             };
 
+            // Vector representation of f(x, y)
             var f = new[]
             {
                 new[] {f1},
                 new[] {f2}
             };
+            // Vector representation of gradient of f(x, y)
             var fGrad = new[]
             {
                 new[] {f1.GradBy(x), f1.GradBy(y)},
                 new[] {f2.GradBy(x), f2.GradBy(y)}
             };
 
+            // Vector representation of fi(x, y)
             var fi = new[]
             {
                 new[] {fi1},
                 new[] {fi2}
             };
+            // Vector representation of gradient of fi(x, y)
             var fiGrad = new[]
             {
                 new[] {fi1.GradBy(x), fi1.GradBy(y)},
                 new[] {fi2.GradBy(x), fi2.GradBy(y)}
             };
 
+            // Function F to minimize: F(x, y) = f1(x, y) * f1(x, y) + f2(x, y) * f2(x, y)
             var minF = f1 * f1 + f2 * f2;
+            // Gradient of function F
             var minFGrad = new[]
             {
                 new[] {minF.GradBy(x)},
                 new[] {minF.GradBy(y)}
             };
 
+            // Prepare output file
             using var outputFile = File.Create(outputFileName);
             using var writer = new StreamWriter(outputFile);
-
             PrintHeader(writer, values, parameters);
 
-            var simpleIteration = new SimpleIterationSolver(writer, epsilon);
-            var newton = new NewtonSolver(writer, epsilon);
-            var gradientDescend = new GradientDescendSolver(writer, epsilon, parameters);
-
-            simpleIteration.Solve(f, fi, fiGrad, values.CreateCopy());
-            newton.Solve(f, fGrad, values.CreateCopy());
-            gradientDescend.Solve(minF, minFGrad, f, values.CreateCopy());
+            // Calculations
+            new SimpleIterationSolver(writer, epsilon).Solve(f, fi, fiGrad, values.CreateCopy());
+            new NewtonSolver(writer, epsilon).Solve(f, fGrad, values.CreateCopy());
+            new GradientDescendSolver(writer, epsilon, parameters).Solve(minF, minFGrad, f, values.CreateCopy());
         }
 
+        // Print header with values of x and parameters for gradient descend method
         private static void PrintHeader(TextWriter writer, double[][] values,
             GradientDescendParameters parameters)
         {
@@ -107,17 +122,20 @@ namespace NonLinearEquations
         }
     }
 
+    // Solver based on simple iterations method
     public class SimpleIterationSolver
     {
         private readonly StreamWriter _streamWriter;
         private readonly double _eps;
 
+        // Create solver that sends output to streamWriter with given epsilon
         public SimpleIterationSolver(StreamWriter streamWriter, double epsilon)
         {
             _streamWriter = streamWriter;
             _eps = epsilon;
         }
 
+        // Solve system f with provided approximate values
         public void Solve(ITerm[][] f, ITerm[][] fi, ITerm[][] fiGrad, double[][] values)
         {
             _streamWriter.WriteLine("\n=== Simple iteration method ===");
@@ -159,29 +177,37 @@ namespace NonLinearEquations
             } while (!Converged(xDiff));
         }
 
+        // Check whether the method converged
         private bool Converged(double[][] xDiff) =>
             xDiff.All(row => row
                 .Select(Math.Abs)
                 .All(value => value < _eps));
     }
 
+    // Set of parameters for gradient descend method
     public class GradientDescendParameters
     {
+        // Alpha controls speed of gradient descend
         public double Alpha { get; set; } = 1.0;
+
+        // Lambda is a multiplier by which Alpha gets multiplier in order to reduce gradient descend speed
         public double Lambda { get; set; } = 0.5;
     }
 
+    // Solver based on Newton method
     public class NewtonSolver
     {
         private readonly StreamWriter _streamWriter;
         private readonly double _eps;
 
+        // Create solver that sends output to streamWriter with given epsilon
         public NewtonSolver(StreamWriter streamWriter, double epsilon)
         {
             _streamWriter = streamWriter;
             _eps = epsilon;
         }
 
+        // Solve system f with provided approximate values
         public void Solve(ITerm[][] f, ITerm[][] fGrad, double[][] values)
         {
             _streamWriter.WriteLine("\n=== Newton method ===\n");
@@ -208,18 +234,21 @@ namespace NonLinearEquations
             } while (!Converged(previousFValues));
         }
 
+        // Check whether the method converged
         private bool Converged(double[][] previousFValues) =>
             previousFValues.All(row => row
                 .Select(Math.Abs)
                 .All(value => value < _eps));
     }
 
+    // Solver based on gradient descend method
     public class GradientDescendSolver
     {
         private readonly StreamWriter _streamWriter;
         private readonly double _eps;
         private readonly GradientDescendParameters _parameters;
 
+        // Create solver that sends output to streamWriter with given epsilon and provided parameters
         public GradientDescendSolver(StreamWriter streamWriter, double epsilon, GradientDescendParameters parameters)
         {
             _streamWriter = streamWriter;
@@ -227,6 +256,7 @@ namespace NonLinearEquations
             _parameters = parameters;
         }
 
+        // Minimize function minF with provided approximate values
         public void Solve(ITerm minF, ITerm[][] minFGrad, ITerm[][] f, double[][] values)
         {
             _streamWriter.WriteLine("\n=== Gradient descend method ===");
@@ -244,13 +274,13 @@ namespace NonLinearEquations
             {
                 i++;
 
-                var newValues = MakeIteration(minFGrad, values);
+                var newValues = RecalculateValues(minFGrad, values);
 
                 while (minF.Evaluate(newValues) >= minF.Evaluate(values))
                 {
                     k++;
                     _parameters.Alpha *= _parameters.Lambda;
-                    newValues = MakeIteration(minFGrad, values);
+                    newValues = RecalculateValues(minFGrad, values);
                 }
 
                 var previousX = values;
@@ -268,7 +298,8 @@ namespace NonLinearEquations
             } while (!Converged(xDiff));
         }
 
-        private double[][] MakeIteration(ITerm[][] minFGrad, double[][] values)
+        // Recalculate value of matrix x
+        private double[][] RecalculateValues(ITerm[][] minFGrad, double[][] values)
         {
             var gradValues = minFGrad.Evaluate(values);
             gradValues.Multiply(_parameters.Alpha);
@@ -278,11 +309,14 @@ namespace NonLinearEquations
             return newValues;
         }
 
+        // Check whether the method converged
         private bool Converged(double[][] xDiff) => Math.Abs(xDiff.Norm3()) < _eps;
     }
 
+    // Class that provides methods for function evaluation
     public static class Evaluation
     {
+        // Evaluate function in every cell with provided input values and return matrix of the same dimensions with results
         public static double[][] Evaluate(this ITerm[][] matrix, double[][] values)
         {
             var copy = matrix.CreateCompatible<ITerm, double>();
@@ -298,8 +332,10 @@ namespace NonLinearEquations
         }
     }
 
+    // Class that provides operations on matrices
     public static class MatrixMath
     {
+        // Create inverse matrix of matrix a
         public static double[][] CreateInverse(this double[][] a)
         {
             var l = a.CreateCompatible();
@@ -335,18 +371,11 @@ namespace NonLinearEquations
             return invertedA;
         }
 
-        public static void Multiply(this double[][] matrix, double value)
-        {
-            for (var i = 0; i < matrix.Rows(); i++)
-            {
-                for (var j = 0; j < matrix.Columns(); j++)
-                {
-                    matrix[i][j] *= value;
-                }
-            }
-        }
+        // Multiply matrix by value
+        public static void Multiply(this double[][] matrix, double value) => matrix.Map(x => x * value);
 
-        public static void Map(this double[][] matrix, Func<double, double> f)
+        // Apply map function to each element of the matrix, returning new matrix as a result
+        private static void Map(this double[][] matrix, Func<double, double> f)
         {
             for (var i = 0; i < matrix.Rows(); i++)
             {
