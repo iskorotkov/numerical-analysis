@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using MathExpressions;
@@ -20,31 +21,31 @@ namespace NonLinearEquations
 
             // sample
             // Functions f(x, y)
-            var f1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5) - T.Var(0);
-            var f2 = -T.Cos(T.Var(0) - 2) - T.Var(1);
+            //var f1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5) - T.Var(0);
+            //var f2 = -T.Cos(T.Var(0) - 2) - T.Var(1);
             // Functions fi(x, y) (for simple iteration method)
-            var fi1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5);
-            var fi2 = -T.Cos(T.Var(0) - 2);
-            // Approximated root of system of equations
-            var values = new[]
-            {
-                new[] {-0.1},
-                new[] {0.5}
-            };
-
-            // variant 8
-            // Functions f(x, y)
-            //var f1 = 2 * y - T.Cos(x + 1);
-            //var f2 = x + T.Sin(y) + 0.4;
-            // Functions fi(x, y) (for simple iteration method)
-            //var fi1 = -T.Sin(y) - 0.4;
-            //var fi2 = T.Cos(x + 1) / 2;
+            //var fi1 = -T.Value(1) + T.Sin(T.Var(1) + 0.5);
+            //var fi2 = -T.Cos(T.Var(0) - 2);
             // Approximated root of system of equations
             //var values = new[]
             //{
-            //    new[] {-0.9},
+            //    new[] {-0.1},
             //    new[] {0.5}
             //};
+
+            // variant 8
+            // Functions f(x, y)
+            var f1 = 2 * y - T.Cos(x + 1);
+            var f2 = x + T.Sin(y) + 0.4;
+            // Functions fi(x, y) (for simple iteration method)
+            var fi1 = -T.Sin(y) - 0.4;
+            var fi2 = T.Cos(x + 1) / 2;
+            // Approximated root of system of equations
+            var values = new[]
+            {
+                new[] {-0.9},
+                new[] {0.5}
+            };
 
             // variant 9
             // Functions f(x, y)
@@ -108,9 +109,33 @@ namespace NonLinearEquations
             PrintHeader(writer, values, gdParams);
 
             // Calculations
-            new SimpleIterationSolver(writer, epsilon).Solve(f, fi, fiGrad, values.CreateCopy());
-            new NewtonSolver(writer, epsilon).Solve(f, fGrad, values.CreateCopy());
-            new GradientDescendSolver(writer, epsilon, gdParams).Solve(minF, minFGrad, f, values.CreateCopy());
+            const int loops = 10000;
+            var timer = new Stopwatch();
+            timer.Start();
+            for (var i = 0; i < loops; i++)
+            {
+                new SimpleIterationSolver(writer, epsilon).Solve(f, fi, fiGrad, values.CreateCopy());
+            }
+            timer.Stop();
+            var t0 = (double)timer.ElapsedMilliseconds / loops;
+
+            timer.Restart();
+            for (var i = 0; i < loops; i++)
+            {
+                new NewtonSolver(writer, epsilon).Solve(f, fGrad, values.CreateCopy());
+            }
+            timer.Stop();
+            var t1 = (double)timer.ElapsedMilliseconds / loops;
+
+            timer.Restart();
+            for (var i = 0; i < loops; i++)
+            {
+                new GradientDescendSolver(writer, epsilon, gdParams).Solve(minF, minFGrad, f, values.CreateCopy());
+            }
+            timer.Stop();
+            var t2 = (double)timer.ElapsedMilliseconds / loops;
+
+            Console.WriteLine($"\nTime: {t0} {t1} {t2}");
         }
 
         // Print header with values of x and parameters for gradient descend method
