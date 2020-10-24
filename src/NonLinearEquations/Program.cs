@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using MathExpressions;
 using MathExpressions.Terms;
@@ -59,43 +60,52 @@ namespace NonLinearEquations
                 new[] {minF.GradBy(new Var(1))}
             };
 
-            PrintHeader(values, parameters);
+            using var outputFile = File.Create("../../../data/output.txt");
+            using var writer = new StreamWriter(outputFile);
 
-            var simpleIteration = new SimpleIterationSolver(epsilon);
-            var newton = new NewtonSolver(epsilon);
-            var gradientDescend = new GradientDescendSolver(epsilon, parameters);
+            PrintHeader(writer, values, parameters);
+
+            var simpleIteration = new SimpleIterationSolver(writer, epsilon);
+            var newton = new NewtonSolver(writer, epsilon);
+            var gradientDescend = new GradientDescendSolver(writer, epsilon, parameters);
 
             simpleIteration.Solve(f, fi, fiGrad, values.CreateCopy());
             newton.Solve(f, fGrad, values.CreateCopy());
             gradientDescend.Solve(minF, minFGrad, f, values.CreateCopy());
         }
 
-        private static void PrintHeader(double[][] values, GradientDescendParameters parameters)
+        private static void PrintHeader(TextWriter writer, double[][] values,
+            GradientDescendParameters parameters)
         {
-            Console.WriteLine($"x:\n{values.ToPrettyString()}");
-            Console.WriteLine($"\nParameters:\n\talpha = {parameters.Alpha}\n\tlambda = {parameters.Lambda}");
+            writer.WriteLine($"x:\n{values.ToPrettyString()}");
+            writer.WriteLine($"\nParameters:\n\talpha = {parameters.Alpha}\n\tlambda = {parameters.Lambda}");
         }
     }
 
     public class SimpleIterationSolver
     {
+        private readonly StreamWriter _streamWriter;
         private readonly double _eps;
 
-        public SimpleIterationSolver(double epsilon) => _eps = epsilon;
+        public SimpleIterationSolver(StreamWriter streamWriter, double epsilon)
+        {
+            _streamWriter = streamWriter;
+            _eps = epsilon;
+        }
 
         public void Solve(ITerm[][] f, ITerm[][] fi, ITerm[][] fiGrad,
             double[][] values)
         {
-            Console.WriteLine("\n=== Simple iteration method ===");
+            _streamWriter.WriteLine("\n=== Simple iteration method ===");
 
             var jakobi = fiGrad.Evaluate(values);
-            Console.WriteLine("\nJakobi:");
-            Console.WriteLine(jakobi.ToPrettyString());
+            _streamWriter.WriteLine("\nJakobi:");
+            _streamWriter.WriteLine(jakobi.ToPrettyString());
 
             var q = jakobi.Norm3();
-            Console.WriteLine($"\nJakobi norm = {q}\n");
+            _streamWriter.WriteLine($"\nJakobi norm = {q}\n");
 
-            Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}{"jakobi norm",15}");
+            _streamWriter.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}{"jakobi norm",15}");
 
             var i = 0;
             double[][] xDiff;
@@ -111,7 +121,7 @@ namespace NonLinearEquations
                 var jakobiValues = fiGrad.Evaluate(values);
                 var jakobiNorm = jakobiValues.Norm3();
 
-                Console.WriteLine(
+                _streamWriter.WriteLine(
                     $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{residualNorm,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{jakobiNorm,15:G6}");
 
                 xDiff = previousValues;
@@ -133,15 +143,20 @@ namespace NonLinearEquations
 
     public class NewtonSolver
     {
+        private readonly StreamWriter _streamWriter;
         private readonly double _eps;
 
-        public NewtonSolver(double epsilon) => _eps = epsilon;
+        public NewtonSolver(StreamWriter streamWriter, double epsilon)
+        {
+            _streamWriter = streamWriter;
+            _eps = epsilon;
+        }
 
         public void Solve(ITerm[][] f, ITerm[][] fGrad, double[][] values)
         {
-            Console.WriteLine("\n=== Newton method ===\n");
+            _streamWriter.WriteLine("\n=== Newton method ===\n");
 
-            Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}");
+            _streamWriter.WriteLine($"{"i",3}{"x",15}{"y",15}{"residual norm",15}{"f1",15}{"f2",15}");
 
             var i = 0;
             var fValues = f.Evaluate(values);
@@ -158,7 +173,7 @@ namespace NonLinearEquations
                 fValues = f.Evaluate(values);
                 var residual = fValues.Norm3();
 
-                Console.WriteLine(
+                _streamWriter.WriteLine(
                     $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}");
             } while (!Converged(previousFValues));
         }
@@ -171,20 +186,25 @@ namespace NonLinearEquations
 
     public class GradientDescendSolver
     {
+        private readonly StreamWriter _streamWriter;
         private readonly double _eps;
         private readonly GradientDescendParameters _parameters;
 
-        public GradientDescendSolver(double epsilon, GradientDescendParameters parameters) =>
-            (_eps, _parameters) = (epsilon, parameters);
+        public GradientDescendSolver(StreamWriter streamWriter, double epsilon, GradientDescendParameters parameters)
+        {
+            _streamWriter = streamWriter;
+            _eps = epsilon;
+            _parameters = parameters;
+        }
 
         public void Solve(ITerm minF, ITerm[][] minFGrad, ITerm[][] f, double[][] values)
         {
-            Console.WriteLine("\n=== Gradient descend method ===");
+            _streamWriter.WriteLine("\n=== Gradient descend method ===");
 
             var gradient = minFGrad.Evaluate(values);
-            Console.WriteLine($"\nGradient vector:\n{gradient.ToPrettyString()}\n");
+            _streamWriter.WriteLine($"\nGradient vector:\n{gradient.ToPrettyString()}\n");
 
-            Console.WriteLine($"{"i",3}{"x",15}{"y",15}{"alpha",15}{"residual",15}{"f1",15}{"f2",15}{"F",15}{"k",3}");
+            _streamWriter.WriteLine($"{"i",3}{"x",15}{"y",15}{"alpha",15}{"residual",15}{"f1",15}{"f2",15}{"F",15}{"k",3}");
 
             var k = 0;
             var i = 0;
@@ -209,7 +229,7 @@ namespace NonLinearEquations
                 var residual = fValues.Norm3();
                 var minFValue = minF.Evaluate(values);
 
-                Console.WriteLine(
+                _streamWriter.WriteLine(
                     $"{i,3}{values[0][0],15:G6}{values[1][0],15:G6}{_parameters.Alpha,15:G6}{residual,15:G6}{fValues[0][0],15:G6}{fValues[1][0],15:G6}{minFValue,15:G6}{k,3}");
 
                 xDiff = previousX;
