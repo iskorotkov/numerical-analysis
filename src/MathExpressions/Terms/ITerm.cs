@@ -4,7 +4,7 @@
     {
         double Evaluate(double[][] x);
         ITerm Grad();
-        ITerm GradBy(Var v);
+        ITerm GradBy(ITerm v);
 
         public static ITerm operator +(ITerm left, ITerm right) => new Sum(left, right);
         public static ITerm operator -(ITerm left, ITerm right) => new Diff(left, right);

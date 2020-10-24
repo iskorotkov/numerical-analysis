@@ -16,7 +16,7 @@
                     new Product(_leftArg, _rightArg.Grad())),
                 new Product(_rightArg, _rightArg));
 
-        public ITerm GradBy(Var v) =>
+        public ITerm GradBy(ITerm v) =>
             new Fraction(
                 new Diff(
                     new Product(_leftArg.GradBy(v), _rightArg),

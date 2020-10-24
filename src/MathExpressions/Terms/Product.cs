@@ -14,7 +14,7 @@
                 new Product(_leftArg.Grad(), _rightArg),
                 new Product(_leftArg, _rightArg.Grad()));
 
-        public ITerm GradBy(Var v) =>
+        public ITerm GradBy(ITerm v) =>
             new Sum(
                 new Product(_leftArg.GradBy(v), _rightArg),
                 new Product(_leftArg, _rightArg.GradBy(v)));

@@ -9,7 +9,7 @@
 
         public double Evaluate(double[][] x) => _leftArg.Evaluate(x) + _rightArg.Evaluate(x);
         public ITerm Grad() => new Sum(_leftArg.Grad(), _rightArg.Grad());
-        public ITerm GradBy(Var v) => new Sum(_leftArg.GradBy(v), _rightArg.GradBy(v));
+        public ITerm GradBy(ITerm v) => new Sum(_leftArg.GradBy(v), _rightArg.GradBy(v));
 
         public override string ToString() => $"{_leftArg} + {_rightArg}";
     }

@@ -8,7 +8,7 @@
 
         public double Evaluate(double[][] x) => x[_index][0];
         public ITerm Grad() => new Value(1d);
-        public ITerm GradBy(Var v) => new Value(Equals(v) ? 1d : 0d);
+        public ITerm GradBy(ITerm v) => new Value(Equals(v) ? 1d : 0d);
 
         public override string ToString() => $"var{_index}";
     }
