@@ -12,6 +12,7 @@ namespace NonLinearEquations
         private static void Main()
         {
             const double epsilon = 1e-4;
+            const string outputFileName = "../../../data/output.txt";
 
             var values = new[]
             {
@@ -60,7 +61,7 @@ namespace NonLinearEquations
                 new[] {minF.GradBy(new Var(1))}
             };
 
-            using var outputFile = File.Create("../../../data/output.txt");
+            using var outputFile = File.Create(outputFileName);
             using var writer = new StreamWriter(outputFile);
 
             PrintHeader(writer, values, parameters);
