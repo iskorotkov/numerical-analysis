@@ -7,8 +7,8 @@ namespace SLAE.DirectMethods
 {
     internal static class Program
     {
-        private const string InputFile = "data/in.txt";
-        private const string OutputFile = "data/out.txt";
+        private const string InputFile = "../../../data/in.txt";
+        private const string OutputFile = "../../../data/out.txt";
 
         private static void Main()
         {
