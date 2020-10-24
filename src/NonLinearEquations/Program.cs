@@ -2,6 +2,7 @@
 using MathExpressions;
 using MathExpressions.Terms;
 using SLAE.DirectMethods;
+using Console = System.Console;
 
 namespace NonLinearEquations
 {
@@ -15,11 +16,17 @@ namespace NonLinearEquations
                 new[] {0.5}
             };
 
+            var parameters = new GradientDescendParameters
+            {
+                Alpha = 1.0,
+                Lambda = 0.5
+            };
+
             var x = T.Var(0);
             var y = T.Var(1);
 
-            var f1 = -T.Value(1) + T.Sin(y + 0.5);
-            var f2 = -T.Cos(x - 2);
+            var f1 = -T.Value(1) + T.Sin(y + 0.5) - x;
+            var f2 = -T.Cos(x - 2) - y;
 
             var f = new[]
             {
@@ -32,7 +39,23 @@ namespace NonLinearEquations
                 new[] {f2.GradBy((Var) x), f2.GradBy((Var) y)}
             };
 
-            f.SolveWithSimpleIterationMethod(fGrad, values.CreateCopy());
+            var fi1 = x + f1;
+            var fi2 = y + f2;
+
+            var fi = new[]
+            {
+                new[] {fi1},
+                new[] {fi2}
+            };
+            var fiGrad = new[]
+            {
+                new[] {fi1.GradBy((Var) x), fi1.GradBy((Var) y)},
+                new[] {fi2.GradBy((Var) x), fi2.GradBy((Var) y)}
+            };
+
+            PrintHeader(values, parameters);
+
+            f.SolveWithSimpleIterationMethod(fi, fiGrad, values.CreateCopy());
 
             f.SolveWithNewtonMethod(fGrad, values.CreateCopy());
 
@@ -43,12 +66,13 @@ namespace NonLinearEquations
                 new[] {minimizedF.GradBy((Var) y)}
             };
 
-            var parameters = new GradientDescendParameters
-            {
-                Alpha = 1.0,
-                Lambda = 0.5
-            };
             minimizedF.SolveWithGradientDescendMethod(minimizedGrad, parameters, values.CreateCopy());
+        }
+
+        private static void PrintHeader(double[][] values, GradientDescendParameters parameters)
+        {
+            Console.WriteLine($"x:\n{values.ToPrettyString()}\n");
+            Console.WriteLine($"Parameters:\n\talpha={parameters.Alpha}\n\tlambda={parameters.Lambda}\n");
         }
     }
 
@@ -60,24 +84,24 @@ namespace NonLinearEquations
 
     public static class SimpleIterationMethod
     {
-        public static void SolveWithSimpleIterationMethod(this ITerm[][] f, ITerm[][] fGrad,
+        public static void SolveWithSimpleIterationMethod(this ITerm[][] f,  ITerm[][] fi, ITerm[][] fiGrad,
             double[][] values)
         {
-            var tau = fGrad.Evaluate(values);
-            Console.WriteLine("tau:");
-            Console.WriteLine(tau.ToPrettyString());
-            Console.WriteLine($"Norm={tau.Norm3()}");
+            Console.WriteLine("Simple iteration method\n");
+
+            var jakobi = fiGrad.Evaluate(values);
+            Console.WriteLine("Jakobi:");
+            Console.WriteLine($"{jakobi.ToPrettyString()}\n");
+            Console.WriteLine($"Norm = {jakobi.Norm3()}\n");
 
             Console.WriteLine("{0,5}|{1,15}|{2,15}|{3,15}|{4,15}|{5,15}",
                 "i", "x", "y", "f1", "f2", "residual");
 
-            for (var i = 1; i <= 10; i++)
+            for (var i = 1; i <= 20; i++)
             {
+                values = fi.Evaluate(values);
+
                 var fValues = f.Evaluate(values);
-
-                values.Add(tau.Multiply(fValues));
-
-                fValues = f.Evaluate(values);
                 var residual = fValues.Norm3();
 
                 Console.WriteLine("{0,5}|{1,15:G6}|{2,15:G6}|{3,15:G6}|{4,15:G6}|{5,15:G6}",
@@ -115,12 +139,10 @@ namespace NonLinearEquations
         public static void SolveWithGradientDescendMethod(this ITerm f, ITerm[][] fGrad,
             GradientDescendParameters parameters, double[][] values)
         {
-            Console.WriteLine(fGrad.Evaluate(values).Norm3());
-
             Console.WriteLine("{0,5}|{1,15}|{2,15}|{3,15}|{4,15}",
                 "i", "x", "y", "F", "alpha");
 
-            for (var i = 1; i <= 100; i++)
+            for (var i = 1; i <= 20; i++)
             {
                 var gradValues = fGrad.Evaluate(values);
                 gradValues.Multiply(parameters.Alpha);
