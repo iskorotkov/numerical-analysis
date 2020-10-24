@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MathExpressions\MathExpressions.csproj" />
     <ProjectReference Include="..\SLAE.DirectMethods\SLAE.DirectMethods.csproj" />
   </ItemGroup>
 
