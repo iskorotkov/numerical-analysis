@@ -32,13 +32,13 @@ namespace NonLinearEquations
             };
 
             // variant 8
-            // Functions f(x, y)
+            //// Functions f(x, y)
             //var f1 = 2 * y - T.Cos(x + 1);
             //var f2 = x + T.Sin(y) + 0.4;
-            // Functions fi(x, y) (for simple iteration method)
+            //// Functions fi(x, y) (for simple iteration method)
             //var fi1 = -T.Sin(y) - 0.4;
             //var fi2 = T.Cos(x + 1) / 2;
-            // Approximated root of system of equations
+            //// Approximated root of system of equations
             //var values = new[]
             //{
             //    new[] {-0.9},
@@ -46,13 +46,13 @@ namespace NonLinearEquations
             //};
 
             // variant 9
-            // Functions f(x, y)
+            //// Functions f(x, y)
             //var f1 = T.Cos(x + 0.5) - y - 2;
             //var f2 = T.Sin(y) - 2 * x - 1;
-            // Functions fi(x, y) (for simple iteration method)
+            //// Functions fi(x, y) (for simple iteration method)
             //var fi1 = (T.Sin(y) - 1) / 2;
             //var fi2 = T.Cos(x + 0.5) - 2;
-            // Approximated root of system of equations
+            //// Approximated root of system of equations
             //var values = new[]
             //{
             //    new[] {-0.9},
