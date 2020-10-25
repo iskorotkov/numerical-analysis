@@ -113,7 +113,8 @@ namespace NonLinearEquations
         }
 
         // Print header with values of x and parameters for gradient descend method
-        private static void PrintHeader(TextWriter writer, ITerm[][] f, double[][] values, GradientDescendSolver.Params parameters)
+        private static void PrintHeader(TextWriter writer, ITerm[][] f, double[][] values,
+            GradientDescendSolver.Params parameters)
         {
             writer.WriteLine($"x:\n{values.ToPrettyString()}");
             writer.WriteLine($"\nf:\n{f.ToPrettyString()}");
@@ -150,11 +151,12 @@ namespace NonLinearEquations
             }
 
             WriteTableHeader();
-            IterateUntilConverges(f, fi, fiGrad, values);
+            IterateUntilConverges(f, fi, fiGrad, jakobiNorm, values);
         }
 
         // Make iteration until method converges with given epsilon
-        private void IterateUntilConverges(ITerm[][] f, ITerm[][] fi, ITerm[][] fiGrad, double[][] values)
+        private void IterateUntilConverges(ITerm[][] f, ITerm[][] fi, ITerm[][] fiGrad, double jakobiNorm,
+            double[][] values)
         {
             var i = 0;
             double[][] xDiff;
@@ -169,7 +171,7 @@ namespace NonLinearEquations
 
                 xDiff = previousValues;
                 xDiff.Subtract(values);
-            } while (!Converged(xDiff));
+            } while (!Converged(xDiff, jakobiNorm));
         }
 
         // Print info about iteration i
@@ -204,7 +206,7 @@ namespace NonLinearEquations
         }
 
         // Check whether the method converged
-        private bool Converged(double[][] xDiff) => xDiff.Norm3() < _eps;
+        private bool Converged(double[][] xDiff, double q) => xDiff.Norm3() < _eps * (1 - q) / q;
     }
 
     // Solver based on Newton method
