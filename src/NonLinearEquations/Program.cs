@@ -204,10 +204,7 @@ namespace NonLinearEquations
         }
 
         // Check whether the method converged
-        private bool Converged(double[][] xDiff) =>
-            xDiff.All(row => row
-                .Select(Math.Abs)
-                .All(value => value < _eps));
+        private bool Converged(double[][] xDiff) => xDiff.Norm3() < _eps;
     }
 
     // Solver based on Newton method
@@ -278,10 +275,7 @@ namespace NonLinearEquations
         }
 
         // Check whether the method converged
-        private bool Converged(double[][] previousFValues) =>
-            previousFValues.All(row => row
-                .Select(Math.Abs)
-                .All(value => value < _eps));
+        private bool Converged(double[][] previousFValues) => previousFValues.Norm3() < _eps;
     }
 
     // Solver based on gradient descend method
@@ -387,7 +381,7 @@ namespace NonLinearEquations
         }
 
         // Check whether the method converged
-        private bool Converged(double[][] xDiff) => Math.Abs(xDiff.Norm3()) < _eps;
+        private bool Converged(double[][] xDiff) => xDiff.Norm3() < _eps;
     }
 
     // Class that provides methods for function evaluation
