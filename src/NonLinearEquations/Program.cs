@@ -318,6 +318,8 @@ namespace NonLinearEquations
             var k = 0;
             var i = 0;
             double[][] xDiff;
+            double[][] fDiff;
+            var fValues = f.Evaluate(values);
             do
             {
                 i++;
@@ -337,7 +339,11 @@ namespace NonLinearEquations
 
                 xDiff = previousX;
                 xDiff.Subtract(values);
-            } while (!Converged(xDiff));
+
+                fDiff = fValues;
+                fValues = f.Evaluate(values);
+                fDiff.Subtract(fValues);
+            } while (!Converged(xDiff) || !Converged(fDiff));
         }
 
         // Write info about iteration i
