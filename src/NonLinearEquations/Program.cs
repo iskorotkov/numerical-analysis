@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using MathExpressions;
 using MathExpressions.Terms;
 using SLAE.DirectMethods;
