@@ -22,6 +22,6 @@
         public static ITerm operator /(ITerm left, double d) => new Fraction(left, new Value(d));
 
         public static ITerm operator +(ITerm term) => term;
-        public static ITerm operator -(ITerm term) => new Diff(new Value(0), term);
+        public static ITerm operator -(ITerm term) => new Negate(term);
     }
 }
