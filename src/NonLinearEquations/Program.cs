@@ -104,7 +104,7 @@ namespace NonLinearEquations
             // Prepare output file
             using var outputFile = File.Create(outputFileName);
             using var writer = new StreamWriter(outputFile);
-            PrintHeader(writer, f, values, gdParams);
+            PrintHeader(writer, f, values);
 
             // Calculations
             new SimpleIterationSolver(writer, epsilon).Solve(f, fi, fiGrad, values.CreateCopy());
@@ -113,7 +113,7 @@ namespace NonLinearEquations
         }
 
         // Print header with values of x and parameters for gradient descend method
-        private static void PrintHeader(TextWriter writer, ITerm[][] f, double[][] values, GradientDescendSolver.Params parameters)
+        private static void PrintHeader(TextWriter writer, ITerm[][] f, double[][] values)
         {
             writer.WriteLine($"x:\n{values.ToPrettyString()}");
             writer.WriteLine($"\nf:\n{f.ToPrettyString()}");
