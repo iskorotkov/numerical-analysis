@@ -104,7 +104,7 @@ namespace NonLinearEquations
             // Prepare output file
             using var outputFile = File.Create(outputFileName);
             using var writer = new StreamWriter(outputFile);
-            PrintHeader(writer, values, gdParams);
+            PrintHeader(writer, f, values, gdParams);
 
             // Calculations
             new SimpleIterationSolver(writer, epsilon).Solve(f, fi, fiGrad, values.CreateCopy());
@@ -113,10 +113,10 @@ namespace NonLinearEquations
         }
 
         // Print header with values of x and parameters for gradient descend method
-        private static void PrintHeader(TextWriter writer, double[][] values, GradientDescendSolver.Params parameters)
+        private static void PrintHeader(TextWriter writer, ITerm[][] f, double[][] values, GradientDescendSolver.Params parameters)
         {
             writer.WriteLine($"x:\n{values.ToPrettyString()}");
-            writer.WriteLine($"\nParameters:\n\talpha = {parameters.Alpha}\n\tlambda = {parameters.Lambda}");
+            writer.WriteLine($"\nf:\n{f.ToPrettyString()}");
         }
     }
 
@@ -141,7 +141,7 @@ namespace NonLinearEquations
             var jakobiValues = fiGrad.Evaluate(values);
             var jakobiNorm = jakobiValues.Norm3();
 
-            WriteInfo(jakobiValues, jakobiNorm);
+            WriteInfo(fi, jakobiValues, jakobiNorm);
 
             if (jakobiNorm >= 1d)
             {
@@ -190,8 +190,9 @@ namespace NonLinearEquations
         }
 
         // Print Jakobi norm value
-        private void WriteInfo(double[][] jakobiValues, double jakobiNorm)
+        private void WriteInfo(ITerm[][] fi, double[][] jakobiValues, double jakobiNorm)
         {
+            _streamWriter.WriteLine($"\nfi:\n{fi.ToPrettyString()}");
             _streamWriter.WriteLine("\nJakobi:");
             _streamWriter.WriteLine(jakobiValues.ToPrettyString());
             _streamWriter.WriteLine($"\nJakobi norm = {jakobiNorm}\n");
@@ -360,6 +361,7 @@ namespace NonLinearEquations
         private void WriteInfo(ITerm[][] minFGrad, double[][] values)
         {
             var gradient = minFGrad.Evaluate(values);
+            _streamWriter.WriteLine($"\nParameters:\n\talpha = {_parameters.Alpha}\n\tlambda = {_parameters.Lambda}");
             _streamWriter.WriteLine($"\nGradient vector:\n{gradient.ToPrettyString()}\n");
         }
 
