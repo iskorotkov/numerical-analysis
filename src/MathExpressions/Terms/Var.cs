@@ -10,6 +10,14 @@
         public ITerm Grad() => new Value(1d);
         public ITerm GradBy(ITerm v) => new Value(Equals(v) ? 1d : 0d);
 
-        public override string ToString() => $"var{_index}";
+        public override string ToString() =>
+            _index switch
+            {
+                0 => "x",
+                1 => "y",
+                2 => "z",
+                3 => "w",
+                _ => $"var{_index}"
+            };
     }
 }
