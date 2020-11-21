@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathExpressions", "src\Math
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathExpressions.Tests", "tests\MathExpressions.Tests\MathExpressions.Tests.csproj", "{A201DE9C-C52C-4EE5-8FD6-6EF1EDFB191F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NumericalIntegration", "src\NumericalIntegration\NumericalIntegration.csproj", "{0725CFB6-68E2-4210-BB5E-0704AD2D6422}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{A201DE9C-C52C-4EE5-8FD6-6EF1EDFB191F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A201DE9C-C52C-4EE5-8FD6-6EF1EDFB191F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A201DE9C-C52C-4EE5-8FD6-6EF1EDFB191F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0725CFB6-68E2-4210-BB5E-0704AD2D6422}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0725CFB6-68E2-4210-BB5E-0704AD2D6422}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0725CFB6-68E2-4210-BB5E-0704AD2D6422}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0725CFB6-68E2-4210-BB5E-0704AD2D6422}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -53,6 +59,7 @@ Global
 		{3F425A20-969B-428A-AB8D-A0ADA5710AFD} = {2055AF02-4638-4F2C-A74D-E8D4ED10E4AC}
 		{8980D6C7-815A-42D7-A07D-7809885B7769} = {2055AF02-4638-4F2C-A74D-E8D4ED10E4AC}
 		{A201DE9C-C52C-4EE5-8FD6-6EF1EDFB191F} = {B2806848-249B-4CEB-B9A3-BC50010A6D70}
+		{0725CFB6-68E2-4210-BB5E-0704AD2D6422} = {2055AF02-4638-4F2C-A74D-E8D4ED10E4AC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {33F5D458-55B2-45E4-8034-B8D4A435E9C7}
