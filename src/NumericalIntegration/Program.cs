@@ -25,8 +25,12 @@ namespace NumericalIntegration
     {
         public void Solve(ITerm f, double a, double b, double eps)
         {
+            Console.WriteLine("Trapezoid method");
+            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+
             var s1 = f.Evaluate(a.AsMatrix()) + f.Evaluate(b.AsMatrix());
-            for (var n = 1; n <= 10; n++)
+            double? previousResult = null;
+            for (var n = 1;; n *= 2)
             {
                 var step = (b - a) / (n + 1);
                 var sum = 0d;
@@ -37,7 +41,23 @@ namespace NumericalIntegration
                 }
 
                 var square = step * (s1 / 2 + sum);
-                Console.WriteLine($"n = {n}, square = {square}");
+                if (previousResult is { } p)
+                {
+                    var absError = Math.Abs(p - square) / 3;
+                    var relativeError = absError / square;
+                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+
+                    if (relativeError < eps)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                }
+
+                previousResult = square;
             }
         }
     }
@@ -46,11 +66,15 @@ namespace NumericalIntegration
     {
         public void Solve(ITerm f, double a, double b, double eps)
         {
+            Console.WriteLine("Trapezoid method (with splines)");
+            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+
             var firstGrad = f.Grad();
             var s1 = f.Evaluate(a.AsMatrix()) + f.Evaluate(b.AsMatrix());
             var s2 = firstGrad.Evaluate(a.AsMatrix()) - firstGrad.Evaluate(b.AsMatrix());
 
-            for (var n = 2; n <= 10; n += 2)
+            double? previousResult = null;
+            for (var n = 2;; n *= 2)
             {
                 var step = (b - a) / (n + 1);
 
@@ -63,7 +87,23 @@ namespace NumericalIntegration
 
                 var square = step * (1 * s1 / 2 + sum) + step * step * s2 / 12;
 
-                Console.WriteLine($"n = {n}, square = {square}");
+                if (previousResult is { } p)
+                {
+                    var absError = Math.Abs(p - square) / 3;
+                    var relativeError = absError / square;
+                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+
+                    if (relativeError < eps)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                }
+
+                previousResult = square;
             }
         }
     }
@@ -72,8 +112,13 @@ namespace NumericalIntegration
     {
         public void Solve(ITerm f, double a, double b, double eps)
         {
+            Console.WriteLine("Simpson's method");
+            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+
             var s1 = f.Evaluate(a.AsMatrix()) + f.Evaluate(b.AsMatrix());
-            for (var n = 2; n <= 10; n += 2)
+
+            double? previousResult = null;
+            for (var n = 2;; n *= 2)
             {
                 var step = (b - a) / (n + 1);
 
@@ -93,7 +138,23 @@ namespace NumericalIntegration
 
                 var square = step * (s1 + 8 * s2 + 4 * s3) / 6;
 
-                Console.WriteLine($"n = {n}, square = {square}");
+                if (previousResult is { } p)
+                {
+                    var absError = Math.Abs(p - square) / 15;
+                    var relativeError = absError / square;
+                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+
+                    if (relativeError < eps)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                }
+
+                previousResult = square;
             }
         }
     }
@@ -102,7 +163,11 @@ namespace NumericalIntegration
     {
         public void Solve(ITerm f, double a, double b, double eps)
         {
-            for (var n = 1; n <= 10; n++)
+            Console.WriteLine("Gauss-3 method");
+            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+
+            double? previousResult = null;
+            for (var n = 1;; n *= 2)
             {
                 var step = (b - a) / (n + 1);
                 var square = 0d;
@@ -126,7 +191,23 @@ namespace NumericalIntegration
                                            + a2 * f.Evaluate(x2.AsMatrix()));
                 }
 
-                Console.WriteLine($"n = {n}, square = {square}");
+                if (previousResult is { } p)
+                {
+                    var absError = Math.Abs(p - square) / 15;
+                    var relativeError = absError / square;
+                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+
+                    if (relativeError < eps)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                }
+
+                previousResult = square;
             }
         }
     }
