@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using MathExpressions;
 using MathExpressions.Terms;
 
@@ -23,6 +24,8 @@ namespace NumericalIntegration
 
     public class TrapezoidMethodSolver
     {
+        private readonly RungeMethodEvaluator _rungeMethod = new();
+
         public void Solve(ITerm f, double a, double b, double eps)
         {
             Console.WriteLine("Trapezoid method");
@@ -41,6 +44,8 @@ namespace NumericalIntegration
                 }
 
                 var square = step * (s1 / 2 + sum);
+                _rungeMethod.Add(square);
+
                 if (previousResult is { } p)
                 {
                     var absError = Math.Abs(p - square) / 3;
@@ -49,6 +54,10 @@ namespace NumericalIntegration
 
                     if (relativeError < eps)
                     {
+                        var order = _rungeMethod.CalcApproximationOrder();
+                        Console.WriteLine(order != null
+                            ? $"Approximation order = {order}"
+                            : "Can't calculate approximation order: need more iterations");
                         return;
                     }
                 }
@@ -64,6 +73,8 @@ namespace NumericalIntegration
 
     public class ModifiedTrapezoidMethodSolver
     {
+        private readonly RungeMethodEvaluator _rungeMethod = new();
+
         public void Solve(ITerm f, double a, double b, double eps)
         {
             Console.WriteLine("Trapezoid method (with splines)");
@@ -86,6 +97,7 @@ namespace NumericalIntegration
                 }
 
                 var square = step * (1 * s1 / 2 + sum) + step * step * s2 / 12;
+                _rungeMethod.Add(square);
 
                 if (previousResult is { } p)
                 {
@@ -95,6 +107,10 @@ namespace NumericalIntegration
 
                     if (relativeError < eps)
                     {
+                        var order = _rungeMethod.CalcApproximationOrder();
+                        Console.WriteLine(order != null
+                            ? $"Approximation order = {order}"
+                            : "Can't calculate approximation order: need more iterations");
                         return;
                     }
                 }
@@ -110,6 +126,8 @@ namespace NumericalIntegration
 
     public class SimpsonMethodSolver
     {
+        private readonly RungeMethodEvaluator _rungeMethod = new();
+
         public void Solve(ITerm f, double a, double b, double eps)
         {
             Console.WriteLine("Simpson's method");
@@ -137,6 +155,7 @@ namespace NumericalIntegration
                 }
 
                 var square = step * (s1 + 8 * s2 + 4 * s3) / 6;
+                _rungeMethod.Add(square);
 
                 if (previousResult is { } p)
                 {
@@ -146,6 +165,10 @@ namespace NumericalIntegration
 
                     if (relativeError < eps)
                     {
+                        var order = _rungeMethod.CalcApproximationOrder();
+                        Console.WriteLine(order != null
+                            ? $"Approximation order = {order}"
+                            : "Can't calculate approximation order: need more iterations");
                         return;
                     }
                 }
@@ -161,6 +184,8 @@ namespace NumericalIntegration
 
     public class Gauss3MethodSolver
     {
+        private readonly RungeMethodEvaluator _rungeMethod = new();
+
         public void Solve(ITerm f, double a, double b, double eps)
         {
             Console.WriteLine("Gauss-3 method");
@@ -191,6 +216,8 @@ namespace NumericalIntegration
                                            + a2 * f.Evaluate(x2.AsMatrix()));
                 }
 
+                _rungeMethod.Add(square);
+
                 if (previousResult is { } p)
                 {
                     var absError = Math.Abs(p - square) / 15;
@@ -199,6 +226,10 @@ namespace NumericalIntegration
 
                     if (relativeError < eps)
                     {
+                        var order = _rungeMethod.CalcApproximationOrder();
+                        Console.WriteLine(order != null
+                            ? $"Approximation order = {order}"
+                            : "Can't calculate approximation order: need more iterations");
                         return;
                     }
                 }
@@ -209,6 +240,23 @@ namespace NumericalIntegration
 
                 previousResult = square;
             }
+        }
+    }
+
+    public class RungeMethodEvaluator
+    {
+        private readonly List<double> _history = new();
+
+        public void Add(double result) => _history.Add(result);
+
+        public double? CalcApproximationOrder()
+        {
+            if (_history.Count < 3)
+            {
+                return null;
+            }
+
+            return 1 * Math.Log((_history[^1] - _history[^3]) / (_history[^2] - _history[^3]) - 1) / Math.Log(0.5);
         }
     }
 
