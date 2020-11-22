@@ -12,5 +12,8 @@ namespace MathExpressions
 
         public static ITerm Value(double d) => new Value(d);
         public static ITerm Var(int index) => new Var(index);
+
+        public static ITerm Log(ITerm arg, ITerm @base) => new Logarithm(arg, @base);
+        public static ITerm Exp(ITerm @base, ITerm power) => new Exponent(@base, power);
     }
 }
