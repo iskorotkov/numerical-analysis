@@ -16,9 +16,9 @@ namespace NumericalIntegration
             var b = 2;
             
             // Variant 8
-            var f = T.Exp(T.Value(5), x) * 6 * x + 3;
+            // var f = T.Exp(T.Value(5), x) - 6 * x + 3;
             // Variant 9
-            //var f = T.Exp(T.Value(Math.E), x) * 6 * x + 3;
+            var f = T.Exp(T.Value(Math.E), x) - 6 * x + 3;
 
             new TrapezoidMethodSolver().Solve(f, a, b, eps);
             new ModifiedTrapezoidMethodSolver().Solve(f, a, b, eps);
@@ -57,7 +57,7 @@ namespace NumericalIntegration
                     var relativeError = absError / square;
                     Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
 
-                    if (relativeError < eps)
+                    if (Math.Abs(relativeError) < eps)
                     {
                         var order = _rungeMethod.CalcApproximationOrder();
                         Console.WriteLine(order != null
@@ -110,7 +110,7 @@ namespace NumericalIntegration
                     var relativeError = absError / square;
                     Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
 
-                    if (relativeError < eps)
+                    if (Math.Abs(relativeError) < eps)
                     {
                         var order = _rungeMethod.CalcApproximationOrder();
                         Console.WriteLine(order != null
@@ -168,7 +168,7 @@ namespace NumericalIntegration
                     var relativeError = absError / square;
                     Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
 
-                    if (relativeError < eps)
+                    if (Math.Abs(relativeError) < eps)
                     {
                         var order = _rungeMethod.CalcApproximationOrder();
                         Console.WriteLine(order != null
@@ -229,7 +229,7 @@ namespace NumericalIntegration
                     var relativeError = absError / square;
                     Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
 
-                    if (relativeError < eps)
+                    if (Math.Abs(relativeError) < eps)
                     {
                         var order = _rungeMethod.CalcApproximationOrder();
                         Console.WriteLine(order != null
