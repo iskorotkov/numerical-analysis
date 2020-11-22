@@ -16,14 +16,17 @@ namespace NumericalIntegration
             var b = 2;
 
             // Variant 8
-            // var f = T.Exp(T.Value(5), x) - 6 * x + 3;
+            var f = T.Exp(T.Value(5), x) - 6 * x + 3;
             // Variant 9
-            var f = T.Exp(T.Value(Math.E), x) - 6 * x + 3;
+            // var f = T.Exp(T.Value(Math.E), x) - 6 * x + 3;
 
-            new TrapezoidMethodSolver().Solve(f, a, b, eps);
-            new ModifiedTrapezoidMethodSolver().Solve(f, a, b, eps);
-            new SimpsonMethodSolver().Solve(f, a, b, eps);
-            new Gauss3MethodSolver().Solve(f, a, b, eps);
+            var headerTemplate = $"{"n",8}{"h",8}{"Integral",16}{"Error",16}{"Order",16}";
+            var valuesTemplate = "{0,8}{1,8:f4}{2,16:g8}{3,16:g8}{4,16:f4}";
+
+            new TrapezoidMethodSolver().Solve(f, a, b, eps, headerTemplate, valuesTemplate);
+            new ModifiedTrapezoidMethodSolver().Solve(f, a, b, eps, headerTemplate, valuesTemplate);
+            new SimpsonMethodSolver().Solve(f, a, b, eps, headerTemplate, valuesTemplate);
+            new Gauss3MethodSolver().Solve(f, a, b, eps, headerTemplate, valuesTemplate);
         }
     }
 
@@ -31,10 +34,10 @@ namespace NumericalIntegration
     {
         private readonly RungeMethodEvaluator _rungeMethod = new();
 
-        public void Solve(ITerm f, double a, double b, double eps)
+        public void Solve(ITerm f, double a, double b, double eps, string headerTemplate, string valuesTemplate)
         {
             Console.WriteLine("Trapezoid method");
-            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+            Console.WriteLine(headerTemplate);
 
             var s1 = f.Evaluate(a.AsMatrix()) + f.Evaluate(b.AsMatrix());
             double? previousResult = null;
@@ -44,34 +47,32 @@ namespace NumericalIntegration
                 var sum = 0d;
                 for (var i = 1; i < n; i++)
                 {
-                    var value = a + i * step;
-                    sum += f.Evaluate(value.AsMatrix());
+                    var arg = a + i * step;
+                    sum += f.Evaluate(arg.AsMatrix());
                 }
 
-                var square = step * (s1 / 2 + sum);
-                _rungeMethod.Add(square);
+                var value = step * (s1 / 2 + sum);
+                _rungeMethod.Add(value);
 
                 if (previousResult is { } p)
                 {
-                    var absError = Math.Abs(p - square) / 3;
-                    var relativeError = absError / square;
-                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+                    var absError = Math.Abs(p - value) / 3;
+                    var error = absError / value;
+                    object order = _rungeMethod.CalcApproximationOrder();
+                    Console.WriteLine(valuesTemplate, n, step, value, error, order ?? "-");
 
-                    if (Math.Abs(relativeError) < eps)
+                    if (Math.Abs(error) < eps)
                     {
-                        var order = _rungeMethod.CalcApproximationOrder();
-                        Console.WriteLine(order != null
-                            ? $"Approximation order = {order}"
-                            : "Can't calculate approximation order: need more iterations");
-                        return;
+                        Console.WriteLine($"Integral = {value}");
+                        break;
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                    Console.WriteLine(valuesTemplate, n, step, value, "-", "-");
                 }
 
-                previousResult = square;
+                previousResult = value;
             }
         }
     }
@@ -80,17 +81,17 @@ namespace NumericalIntegration
     {
         private readonly RungeMethodEvaluator _rungeMethod = new();
 
-        public void Solve(ITerm f, double a, double b, double eps)
+        public void Solve(ITerm f, double a, double b, double eps, string headerTemplate, string valuesTemplate)
         {
             Console.WriteLine("Trapezoid method (with splines)");
-            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+            Console.WriteLine(headerTemplate);
 
             var firstGrad = f.Grad();
             var s1 = f.Evaluate(a.AsMatrix()) + f.Evaluate(b.AsMatrix());
             var s2 = firstGrad.Evaluate(a.AsMatrix()) - firstGrad.Evaluate(b.AsMatrix());
 
             double? previousResult = null;
-            for (var n = 2;; n *= 2)
+            for (var n = 1;; n *= 2)
             {
                 var step = (b - a) / n;
 
@@ -101,30 +102,28 @@ namespace NumericalIntegration
                     sum += f.Evaluate(arg.AsMatrix());
                 }
 
-                var square = step * (1 * s1 / 2 + sum) + step * step * s2 / 12;
-                _rungeMethod.Add(square);
+                var value = step * (s1 / 2 + sum) + step * step * s2 / 12;
+                _rungeMethod.Add(value);
 
                 if (previousResult is { } p)
                 {
-                    var absError = Math.Abs(p - square) / 3;
-                    var relativeError = absError / square;
-                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+                    var absError = Math.Abs(p - value) / 3;
+                    var error = absError / value;
+                    object order = _rungeMethod.CalcApproximationOrder();
+                    Console.WriteLine(valuesTemplate, n, step, value, error, order ?? "-");
 
-                    if (Math.Abs(relativeError) < eps)
+                    if (Math.Abs(error) < eps)
                     {
-                        var order = _rungeMethod.CalcApproximationOrder();
-                        Console.WriteLine(order != null
-                            ? $"Approximation order = {order}"
-                            : "Can't calculate approximation order: need more iterations");
-                        return;
+                        Console.WriteLine($"Integral = {value}");
+                        break;
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                    Console.WriteLine(valuesTemplate, n, step, value, "-", "-");
                 }
 
-                previousResult = square;
+                previousResult = value;
             }
         }
     }
@@ -133,56 +132,56 @@ namespace NumericalIntegration
     {
         private readonly RungeMethodEvaluator _rungeMethod = new();
 
-        public void Solve(ITerm f, double a, double b, double eps)
+        public void Solve(ITerm f, double a, double b, double eps, string headerTemplate, string valuesTemplate)
         {
             Console.WriteLine("Simpson's method");
-            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+            Console.WriteLine(headerTemplate);
 
             var s1 = f.Evaluate(a.AsMatrix()) + f.Evaluate(b.AsMatrix());
 
             double? previousResult = null;
-            for (var n = 2;; n *= 2)
+            for (var n = 1;; n *= 2)
             {
                 var step = (b - a) / n;
 
+                var (subareas, substep) = (n * 2, step / 2);
+
                 var s2 = 0d;
-                for (var i = 1; i <= n / 2; i++)
+                for (var i = 1; i <= subareas / 2; i++)
                 {
-                    var value = a + step * (2 * i - 1);
-                    s2 += f.Evaluate(value.AsMatrix());
+                    var arg = a + substep * (2 * i - 1);
+                    s2 += f.Evaluate(arg.AsMatrix());
                 }
 
                 var s3 = 0d;
-                for (var i = 1; i <= n / 2 - 1; i++)
+                for (var i = 1; i <= subareas / 2 - 1; i++)
                 {
-                    var value = a + step * (2 * i);
-                    s3 += f.Evaluate(value.AsMatrix());
+                    var arg = a + substep * (2 * i);
+                    s3 += f.Evaluate(arg.AsMatrix());
                 }
 
-                var square = step * (s1 + 4 * s2 + 2 * s3) / 3;
-                _rungeMethod.Add(square);
+                var value = substep * (s1 + 4 * s2 + 2 * s3) / 3;
+                _rungeMethod.Add(value);
 
                 if (previousResult is { } p)
                 {
-                    var absError = Math.Abs(p - square) / 15;
-                    var relativeError = absError / square;
-                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+                    var absError = Math.Abs(p - value) / 15;
+                    var error = absError / value;
+                    object order = _rungeMethod.CalcApproximationOrder();
+                    Console.WriteLine(valuesTemplate, n, step, value, error, order ?? "-");
 
-                    if (Math.Abs(relativeError) < eps)
+                    if (Math.Abs(error) < eps)
                     {
-                        var order = _rungeMethod.CalcApproximationOrder();
-                        Console.WriteLine(order != null
-                            ? $"Approximation order = {order}"
-                            : "Can't calculate approximation order: need more iterations");
-                        return;
+                        Console.WriteLine($"Integral = {value}");
+                        break;
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                    Console.WriteLine(valuesTemplate, n, step, value, "-", "-");
                 }
 
-                previousResult = square;
+                previousResult = value;
             }
         }
     }
@@ -191,16 +190,16 @@ namespace NumericalIntegration
     {
         private readonly RungeMethodEvaluator _rungeMethod = new();
 
-        public void Solve(ITerm f, double a, double b, double eps)
+        public void Solve(ITerm f, double a, double b, double eps, string headerTemplate, string valuesTemplate)
         {
             Console.WriteLine("Gauss-3 method");
-            Console.WriteLine($"{"n",8}{"Square",16}{"Abs error",16}{"Error",16}");
+            Console.WriteLine(headerTemplate);
 
             double? previousResult = null;
             for (var n = 1;; n *= 2)
             {
                 var step = (b - a) / n;
-                var square = 0d;
+                var value = 0d;
                 for (var i = 0; i < n; i++)
                 {
                     var start = a + step * i;
@@ -216,34 +215,32 @@ namespace NumericalIntegration
                     var a1 = 8d / 9;
                     var a2 = a0;
 
-                    square += amplitude * (a0 * f.Evaluate(x0.AsMatrix())
-                                           + a1 * f.Evaluate(x1.AsMatrix())
-                                           + a2 * f.Evaluate(x2.AsMatrix()));
+                    value += amplitude * (a0 * f.Evaluate(x0.AsMatrix())
+                                          + a1 * f.Evaluate(x1.AsMatrix())
+                                          + a2 * f.Evaluate(x2.AsMatrix()));
                 }
 
-                _rungeMethod.Add(square);
+                _rungeMethod.Add(value);
 
                 if (previousResult is { } p)
                 {
-                    var absError = Math.Abs(p - square) / 15;
-                    var relativeError = absError / square;
-                    Console.WriteLine($"{n,8}{square,16:g10}{absError,16:g10}{relativeError,16:g10}");
+                    var absError = Math.Abs(p - value) / 15;
+                    var error = absError / value;
+                    object order = _rungeMethod.CalcApproximationOrder();
+                    Console.WriteLine(valuesTemplate, n, step, value, error, order ?? "-");
 
-                    if (Math.Abs(relativeError) < eps)
+                    if (Math.Abs(error) < eps)
                     {
-                        var order = _rungeMethod.CalcApproximationOrder();
-                        Console.WriteLine(order != null
-                            ? $"Approximation order = {order}"
-                            : "Can't calculate approximation order: need more iterations");
-                        return;
+                        Console.WriteLine($"Integral = {value}");
+                        break;
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"{n,8}{square,16:g10}{"-",16}{"-",16}");
+                    Console.WriteLine(valuesTemplate, n, step, value, "-", "-");
                 }
 
-                previousResult = square;
+                previousResult = value;
             }
         }
     }
@@ -261,7 +258,7 @@ namespace NumericalIntegration
                 return null;
             }
 
-            return 1 * Math.Log((_history[^1] - _history[^3]) / (_history[^2] - _history[^3]) - 1) / Math.Log(0.5);
+            return Math.Log((_history[^1] - _history[^3]) / (_history[^2] - _history[^3]) - 1) / Math.Log(0.5);
         }
     }
 
