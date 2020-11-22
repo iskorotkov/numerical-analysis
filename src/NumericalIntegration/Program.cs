@@ -11,9 +11,14 @@ namespace NumericalIntegration
         {
             const double eps = 1e-8;
 
-            var f = T.Sin(T.Var(0));
-            var a = 0;
-            var b = Math.PI;
+            var x = T.Var(0);
+            var a = 1;
+            var b = 2;
+            
+            // Variant 8
+            var f = T.Exp(T.Value(5), x) * 6 * x + 3;
+            // Variant 9
+            //var f = T.Exp(T.Value(Math.E), x) * 6 * x + 3;
 
             new TrapezoidMethodSolver().Solve(f, a, b, eps);
             new ModifiedTrapezoidMethodSolver().Solve(f, a, b, eps);
