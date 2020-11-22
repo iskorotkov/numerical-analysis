@@ -14,7 +14,7 @@ namespace NumericalIntegration
             var x = T.Var(0);
             var a = 1;
             var b = 2;
-            
+
             // Variant 8
             // var f = T.Exp(T.Value(5), x) - 6 * x + 3;
             // Variant 9
@@ -40,9 +40,9 @@ namespace NumericalIntegration
             double? previousResult = null;
             for (var n = 1;; n *= 2)
             {
-                var step = (b - a) / (n + 1);
+                var step = (b - a) / n;
                 var sum = 0d;
-                for (var i = 1; i <= n; i++)
+                for (var i = 1; i < n; i++)
                 {
                     var value = a + i * step;
                     sum += f.Evaluate(value.AsMatrix());
@@ -92,10 +92,10 @@ namespace NumericalIntegration
             double? previousResult = null;
             for (var n = 2;; n *= 2)
             {
-                var step = (b - a) / (n + 1);
+                var step = (b - a) / n;
 
                 var sum = 0d;
-                for (var i = 1; i <= n; i++)
+                for (var i = 1; i < n; i++)
                 {
                     var arg = a + i * step;
                     sum += f.Evaluate(arg.AsMatrix());
@@ -143,7 +143,7 @@ namespace NumericalIntegration
             double? previousResult = null;
             for (var n = 2;; n *= 2)
             {
-                var step = (b - a) / (n + 1);
+                var step = (b - a) / n;
 
                 var s2 = 0d;
                 for (var i = 1; i <= n / 2; i++)
@@ -159,7 +159,7 @@ namespace NumericalIntegration
                     s3 += f.Evaluate(value.AsMatrix());
                 }
 
-                var square = step * (s1 + 8 * s2 + 4 * s3) / 6;
+                var square = step * (s1 + 4 * s2 + 2 * s3) / 3;
                 _rungeMethod.Add(square);
 
                 if (previousResult is { } p)
@@ -199,9 +199,9 @@ namespace NumericalIntegration
             double? previousResult = null;
             for (var n = 1;; n *= 2)
             {
-                var step = (b - a) / (n + 1);
+                var step = (b - a) / n;
                 var square = 0d;
-                for (var i = 0; i <= n; i++)
+                for (var i = 0; i < n; i++)
                 {
                     var start = a + step * i;
                     var end = a + step * (i + 1);
@@ -267,6 +267,6 @@ namespace NumericalIntegration
 
     public static class MatrixExtensions
     {
-        public static double[][] AsMatrix(this double x) => new[] {new[] {x}};
+        public static double[][] AsMatrix(this double x) => new[] { new[] { x } };
     }
 }
