@@ -64,6 +64,7 @@ namespace NumericalIntegration
                     if (Math.Abs(error) < eps)
                     {
                         Console.WriteLine($"Integral = {value}");
+                        Console.WriteLine($"Function evaluated {n + 1} times");
                         break;
                     }
                 }
@@ -115,6 +116,7 @@ namespace NumericalIntegration
                     if (Math.Abs(error) < eps)
                     {
                         Console.WriteLine($"Integral = {value}");
+                        Console.WriteLine($"Function evaluated {n + 1} times");
                         break;
                     }
                 }
@@ -173,6 +175,7 @@ namespace NumericalIntegration
                     if (Math.Abs(error) < eps)
                     {
                         Console.WriteLine($"Integral = {value}");
+                        Console.WriteLine($"Function evaluated {2 * n + 1} times");
                         break;
                     }
                 }
@@ -196,6 +199,7 @@ namespace NumericalIntegration
             Console.WriteLine(headerTemplate);
 
             double? previousResult = null;
+            var evaluatedTimes = 0;
             for (var n = 1;; n *= 2)
             {
                 var step = (b - a) / n;
@@ -218,6 +222,7 @@ namespace NumericalIntegration
                     value += amplitude * (a0 * f.Evaluate(x0.AsMatrix())
                                           + a1 * f.Evaluate(x1.AsMatrix())
                                           + a2 * f.Evaluate(x2.AsMatrix()));
+                    evaluatedTimes += 3;
                 }
 
                 _rungeMethod.Add(value);
@@ -232,6 +237,7 @@ namespace NumericalIntegration
                     if (Math.Abs(error) < eps)
                     {
                         Console.WriteLine($"Integral = {value}");
+                        Console.WriteLine($"Function evaluated {evaluatedTimes} times");
                         break;
                     }
                 }
